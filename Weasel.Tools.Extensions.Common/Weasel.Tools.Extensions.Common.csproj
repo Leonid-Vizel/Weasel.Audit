@@ -1,9 +1,38 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net7.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <Title>$(AssemblyName)</Title>
+    <Company>Vizel Leonid</Company>
+    <Product>Weasel</Product>
+    <Authors>Vizel Leonid</Authors>
+    <Description>Common functions for Weasel packages</Description>
+    <PackageIcon>weasel.png</PackageIcon>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>Weasel Audit</PackageTags>
+    <IncludeSymbols>True</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <EnforceCodeStyleInBuild>False</EnforceCodeStyleInBuild>
+    <AnalysisLevel>none</AnalysisLevel>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
+    <RepositoryUrl>https://github.com/Leonid-Vizel/Weasel</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/Leonid-Vizel/Weasel</PackageProjectUrl>
+    <Copyright>Leonid Vizel</Copyright>
   </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\..\..\Downloads\weasel.png">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
 
 </Project>
