@@ -6,6 +6,7 @@
     <Nullable>enable</Nullable>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <Title>$(AssemblyName)</Title>
+    <VersionPrefix>1.0.1</VersionPrefix>
     <Company>Vizel Leonid</Company>
     <Product>Weasel</Product>
     <Authors>Vizel Leonid</Authors>
@@ -27,7 +28,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="..\..\..\..\Downloads\weasel.png">
+    <None Update="weasel.png" Link="weasel.png">
       <Pack>True</Pack>
       <PackagePath>\</PackagePath>
     </None>
