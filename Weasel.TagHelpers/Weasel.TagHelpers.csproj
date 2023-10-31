@@ -27,7 +27,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Weasel.Tools.Extensions.Common" Version="1.0.0" />
+    <PackageReference Include="Weasel.Tools.Extensions.Common" Version="1.0.1" />
   </ItemGroup>
 
   <ItemGroup>
