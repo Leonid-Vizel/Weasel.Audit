@@ -23,4 +23,12 @@ public static class TagHelperExtensions
         var id = Guid.NewGuid().ToString();
         return new TagHelperContext(attrs, items, id);
     }
+
+    public static TagHelperContext CreateEmptyContext(IReadOnlyCollection<TagHelperAttribute> attributes)
+    {
+        var attrs = new TagHelperAttributeList(attributes);
+        var items = new Dictionary<object, object>();
+        var id = Guid.NewGuid().ToString();
+        return new TagHelperContext(attrs, items, id);
+    }
 }

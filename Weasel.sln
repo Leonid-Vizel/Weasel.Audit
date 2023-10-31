@@ -3,9 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.7.34024.191
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Weasel.Tools.Extensions.Common", "Weasel.Tools.Extensions.Common\Weasel.Tools.Extensions.Common.csproj", "{D3595E1D-433F-4F4F-9EBE-2D77939BEEA8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Weasel.Tools.Extensions.Common", "Weasel.Tools.Extensions.Common\Weasel.Tools.Extensions.Common.csproj", "{D3595E1D-433F-4F4F-9EBE-2D77939BEEA8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Weasel.Tests", "Weasel.Tests\Weasel.Tests.csproj", "{9F5B7213-F757-4948-AB00-66E97578FB7A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Weasel.Tests", "Weasel.Tests\Weasel.Tests.csproj", "{9F5B7213-F757-4948-AB00-66E97578FB7A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Weasel.TagHelpers", "Weasel.TagHelpers\Weasel.TagHelpers.csproj", "{4272F63D-D0FF-424A-B37E-AD6BAC4D56E1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,10 @@ Global
 		{9F5B7213-F757-4948-AB00-66E97578FB7A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9F5B7213-F757-4948-AB00-66E97578FB7A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9F5B7213-F757-4948-AB00-66E97578FB7A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4272F63D-D0FF-424A-B37E-AD6BAC4D56E1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4272F63D-D0FF-424A-B37E-AD6BAC4D56E1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4272F63D-D0FF-424A-B37E-AD6BAC4D56E1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4272F63D-D0FF-424A-B37E-AD6BAC4D56E1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

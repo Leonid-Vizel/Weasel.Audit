@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net7.0</TargetFramework>
@@ -9,7 +9,7 @@
     <Company>Vizel Leonid</Company>
     <Product>Weasel</Product>
     <Authors>Vizel Leonid</Authors>
-    <Description>Common functions for Weasel packages</Description>
+    <Description>Common TagHelper classes for Weasel packages</Description>
     <PackageIcon>weasel.png</PackageIcon>
     <RepositoryType>git</RepositoryType>
     <PackageTags>Weasel Audit</PackageTags>
@@ -27,10 +27,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="..\..\..\..\Downloads\weasel.png">
-      <Pack>True</Pack>
-      <PackagePath>\</PackagePath>
-    </None>
+    <PackageReference Include="Weasel.Tools.Extensions.Common" Version="1.0.0" />
   </ItemGroup>
 
 </Project>
