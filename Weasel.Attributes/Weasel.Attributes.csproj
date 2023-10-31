@@ -10,7 +10,7 @@
     <Company>Vizel Leonid</Company>
     <Product>Weasel</Product>
     <Authors>Vizel Leonid</Authors>
-    <Description>Common TagHelper classes for Weasel packages</Description>
+    <Description>Common attributes for Weasel packages</Description>
     <PackageIcon>weasel.png</PackageIcon>
     <RepositoryType>git</RepositoryType>
     <PackageTags>Weasel Audit</PackageTags>
@@ -24,17 +24,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <FrameworkReference Include="Microsoft.AspNetCore.App" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Weasel.Tools.Extensions.Common" Version="1.0.1" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Update="weasel.png" Link="weasel.png">
-      <Pack>True</Pack>
+    <None Include="..\Weasel.TagHelpers\weasel.png" Link="weasel.png">
       <PackagePath>\</PackagePath>
+      <Pack>True</Pack>
     </None>
   </ItemGroup>
 

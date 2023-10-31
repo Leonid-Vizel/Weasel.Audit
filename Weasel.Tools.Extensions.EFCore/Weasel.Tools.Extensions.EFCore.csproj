@@ -10,7 +10,7 @@
     <Company>Vizel Leonid</Company>
     <Product>Weasel</Product>
     <Authors>Vizel Leonid</Authors>
-    <Description>Common TagHelper classes for Weasel packages</Description>
+    <Description>Common EFCore functions for Weasel packages</Description>
     <PackageIcon>weasel.png</PackageIcon>
     <RepositoryType>git</RepositoryType>
     <PackageTags>Weasel Audit</PackageTags>
@@ -28,14 +28,22 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Weasel.Tools.Extensions.Common" Version="1.0.1" />
-  </ItemGroup>
-
-  <ItemGroup>
     <None Update="weasel.png" Link="weasel.png">
       <Pack>True</Pack>
       <PackagePath>\</PackagePath>
     </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\Weasel.Tools.Extensions.Common\weasel.png" Link="weasel.png">
+      <PackagePath>\</PackagePath>
+      <Pack>True</Pack>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.13" />
+    <PackageReference Include="Weasel.Attributes" Version="1.0.0" />
   </ItemGroup>
 
 </Project>
