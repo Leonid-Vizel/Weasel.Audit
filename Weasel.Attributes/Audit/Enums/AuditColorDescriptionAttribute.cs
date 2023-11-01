@@ -1,4 +1,4 @@
-﻿namespace Weasel.Attributes.Audit.Enum;
+﻿namespace Weasel.Attributes.Audit.Enums;
 
 public sealed class AuditColorDescriptionAttribute : Attribute
 {

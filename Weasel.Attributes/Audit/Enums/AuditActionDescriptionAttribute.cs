@@ -2,7 +2,7 @@
 using Weasel.Attributes.Audit.Search;
 using Weasel.Enums;
 
-namespace ECRF.Tools.Actions.Attributes;
+namespace Weasel.Attributes.Audit.Enums;
 
 [AttributeUsage(AttributeTargets.Field)]
 public sealed class AuditActionDescriptionAttribute : Attribute
