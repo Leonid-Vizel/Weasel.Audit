@@ -5,7 +5,7 @@ using Weasel.Enums;
 namespace ECRF.Tools.Actions.Attributes;
 
 [AttributeUsage(AttributeTargets.Field)]
-public sealed class ActionDataAttribute : Attribute
+public sealed class AuditActionDescriptionAttribute : Attribute
 {
     public Enum Journal { get; private set; }
     public string Name { get; private set; }
@@ -14,7 +14,7 @@ public sealed class ActionDataAttribute : Attribute
     public Type Type { get; private set; }
     public string SearchTypeName { get; private set; }
     public string SearchUrlTypeName { get; private set; }
-    public ActionDataAttribute(Enum journal, string name, Enum color, AuditScheme scheme, Type type)
+    public AuditActionDescriptionAttribute(Enum journal, string name, Enum color, AuditScheme scheme, Type type)
     {
         Journal = journal;
         Name = name;
