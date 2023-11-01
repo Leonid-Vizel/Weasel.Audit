@@ -9,6 +9,7 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.13" />
     <PackageReference Include="Weasel.Attributes" Version="1.0.4" />
+    <PackageReference Include="Weasel.Audit.Interfaces" Version="1.0.0" />
   </ItemGroup>
 
 </Project>

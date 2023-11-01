@@ -2,7 +2,7 @@
 
 namespace ECRF.Tools.Actions.Interfaces;
 
-public interface IAuditable<TAction>
+public interface IAuditable<TAudit>
 {
-    Task<TAction> AuditAsync(DbContext context);
+    Task<TAudit> AuditAsync(DbContext context);
 }
