@@ -11,6 +11,7 @@
     <Product>Weasel</Product>
     <Authors>Vizel Leonid</Authors>
     <Description>Common TagHelper classes for Weasel packages</Description>
+    <PackageReleaseNotes>Namespace fix + package reference updated</PackageReleaseNotes>
     <PackageIcon>weasel.png</PackageIcon>
     <RepositoryType>git</RepositoryType>
     <PackageTags>Weasel Audit</PackageTags>
@@ -28,7 +29,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Weasel.Tools.Extensions.Common" Version="1.0.1" />
+    <PackageReference Include="Weasel.Tools.Extensions.Common" Version="1.0.3" />
   </ItemGroup>
 
   <ItemGroup>
