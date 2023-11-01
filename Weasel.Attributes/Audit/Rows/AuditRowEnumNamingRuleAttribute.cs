@@ -3,7 +3,7 @@
 namespace Weasel.Attributes.Audit.Rows;
 
 [AttributeUsage(AttributeTargets.Property)]
-public sealed class ActionRowEnumNamingRuleAttribute<T> : ActionRowNamingRuleAttribute where T : struct, Enum
+public sealed class AuditRowEnumNamingRuleAttribute<T> : AuditRowNamingRuleAttribute where T : struct, Enum
 {
     public override string Process(int index)
     {

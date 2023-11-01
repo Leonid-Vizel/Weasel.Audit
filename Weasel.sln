@@ -17,6 +17,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Weasel.Tools.Extensions.EFC
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Weasel.Models.Audit", "Weasel.Models.Audit\Weasel.Models.Audit.csproj", "{58DAC9BC-FBF9-418D-B274-06894974382A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Weasel.Audit.Interfaces", "Weasel.Audit.Interfaces\Weasel.Audit.Interfaces.csproj", "{C08486B7-32D8-43C3-BFA2-A0C25F850283}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Weasel.Services.Audit", "Weasel.Services.Audit\Weasel.Services.Audit.csproj", "{F981B741-377B-41A7-A676-A3DA919F02BE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -51,6 +55,14 @@ Global
 		{58DAC9BC-FBF9-418D-B274-06894974382A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{58DAC9BC-FBF9-418D-B274-06894974382A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{58DAC9BC-FBF9-418D-B274-06894974382A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C08486B7-32D8-43C3-BFA2-A0C25F850283}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C08486B7-32D8-43C3-BFA2-A0C25F850283}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C08486B7-32D8-43C3-BFA2-A0C25F850283}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C08486B7-32D8-43C3-BFA2-A0C25F850283}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F981B741-377B-41A7-A676-A3DA919F02BE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F981B741-377B-41A7-A676-A3DA919F02BE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F981B741-377B-41A7-A676-A3DA919F02BE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F981B741-377B-41A7-A676-A3DA919F02BE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
