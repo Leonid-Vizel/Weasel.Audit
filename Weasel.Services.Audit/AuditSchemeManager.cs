@@ -16,7 +16,17 @@ public struct TypeAuditSchemeKey
     }
 }
 
-public sealed class AuditSchemeManager
+public interface IAuditSchemeManager
+{
+    Enum[] GetSchemaAuditTypes<TAudit>(AuditScheme scheme);
+    Enum[] GetSchemaAuditTypes(AuditScheme scheme, Type actionType);
+    Enum GetFirstSchemaAuditType<TAction>(Enum? type, AuditScheme scheme);
+    Enum GetFirstSchemaAuditType(Type actionType, Enum? type, AuditScheme scheme);
+    List<Enum> GetTypeActions<TAudit>();
+    List<Enum> GetTypeActions(Type actionType);
+}
+
+public sealed class AuditSchemeManager : IAuditSchemeManager
 {
     private readonly ConcurrentDictionary<Type, List<Enum>> _typeActions;
     private readonly ConcurrentDictionary<Enum, AuditActionDescriptionAttribute> _enumDescriptions;
@@ -55,6 +65,26 @@ public sealed class AuditSchemeManager
             _typeSchemaActions.TryAdd(key, action);
         }
         return action;
+    }
+    #endregion
+
+    #region GetFirstSchemaAuditType
+    public Enum GetFirstSchemaAuditType<TAction>(Enum? type, AuditScheme scheme)
+        => GetFirstSchemaAuditType(typeof(TAction), type, scheme);
+
+    public Enum GetFirstSchemaAuditType(Type actionType, Enum? type, AuditScheme scheme)
+    {
+        if (type != null)
+        {
+            return type;
+        }
+        var types = GetSchemaAuditTypes(scheme, actionType);
+        var foundType = types.FirstOrDefault();
+        if (foundType == null)
+        {
+            throw new Exception($"Cant find action type enum for {scheme} and {actionType}!");
+        }
+        return foundType;
     }
     #endregion
 

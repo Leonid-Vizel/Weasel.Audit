@@ -25,15 +25,15 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Weasel.Enums\Weasel.Enums.csproj" />
+    <ProjectReference Include="..\Weasel.Tools.Extensions.Common\Weasel.Tools.Extensions.Common.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Update="weasel.png" Link="weasel.png">
       <Pack>True</Pack>
       <PackagePath>\</PackagePath>
     </None>
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Weasel.Enums" Version="1.0.1" />
-    <PackageReference Include="Weasel.Tools.Extensions.Common" Version="1.0.3" />
   </ItemGroup>
 
 </Project>
