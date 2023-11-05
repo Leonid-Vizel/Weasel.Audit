@@ -139,6 +139,7 @@ public sealed class PostponedAuditManager<TContext> : IPostponedAuditManager whe
                     await storage.PlanPerformActionsAsync(context);
                 }
                 await context.SaveChangesAsync();
+                StateManager.PushStates();
                 List<IAuditAction> dataActions = new List<IAuditAction>();
                 foreach (var storage in _storages.Values)
                 {
@@ -146,7 +147,6 @@ public sealed class PostponedAuditManager<TContext> : IPostponedAuditManager whe
                 }
                 await context.AddRangeAsync(dataActions);
                 await context.SaveChangesAsync();
-                StateManager.PushStates();
                 _logger.LogInformation($"Performed {dataActions.Count} postponed action(s) for {_storages.Count} type(s)");
             }
             catch (Exception ex)
