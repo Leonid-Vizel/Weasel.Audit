@@ -20,4 +20,13 @@ public static class StringExtensions
     {
         int index = name.LastIndexOf(".") + 1;
         return index == 0 || index >= name.Length ? name : name.Substring(index);
-    }}
+    }
+    public static string Crop(this string value, int lengthWithEndCharacters, string? endCharacters = "...")
+    {
+        if (value.Length <= lengthWithEndCharacters)
+        {
+            return value;
+        }
+        return $"{value.Substring(0, lengthWithEndCharacters - endCharacters?.Length ?? 0)}{endCharacters}";
+    }
+}
