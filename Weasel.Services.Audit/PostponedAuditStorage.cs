@@ -189,6 +189,18 @@ public sealed class PostponedAuditStorage<T, TAudit> : IPosponedActionsStorage
     #endregion
 
     #region PlanDataActions
+    private void AddAknowledgeDataActions(List<IAuditAction> list)
+    {
+        if (_aknowledgeActions.Count == 0)
+        {
+            return;
+        }
+        foreach (var modelData in _aknowledgeActions)
+        {
+            var resultAction = ActionFactory.CreateAuditAction(modelData.ActionType, modelData.EntityId, modelData.UserId, modelData.Action.Id, null, modelData.OverrideLogin, modelData.OverrideColor, DateTime.Now);
+            list.Add(resultAction);
+        }
+    }
     private void AddCreateDataActions(List<IAuditAction> list)
     {
         if (_createActions.Count == 0)
@@ -227,6 +239,7 @@ public sealed class PostponedAuditStorage<T, TAudit> : IPosponedActionsStorage
     }
     public void LoadDataActions(List<IAuditAction> list)
     {
+        AddAknowledgeDataActions(list);
         AddCreateDataActions(list);
         AddUpdateDataActions(list);
         AddDeleteDataActions(list);

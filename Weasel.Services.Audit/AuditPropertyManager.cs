@@ -1,23 +1,49 @@
 ﻿using System.Linq.Expressions;
 using System.Reflection;
-using Weasel.Attributes.Audit.Formatters;
-using Weasel.Attributes.Audit.Rows;
-using Weasel.Enums;
 
 namespace Weasel.Services.Audit;
 
-public struct AuditPropertyCache
+public interface IAuditPropertyManager
 {
-    public Type Type { get; private set; } = null!;
-    public Func<object, object> Getter { get; private set; } = null!;
-    public Action<object, object> Setter { get; private set; } = null!;
-    public AuditValueFormatterAttribute? ValueFormatter { get; private set; }
-    public AuditRowNamingRuleAttribute? RowNaming { get; private set; }
-    public AuditPropertyDisplayMode DisplayMode { get; private set; }
+    Func<object, object> CreatePropertyGetter(PropertyInfo info);
+    Action<object, object> CreatePropertySetter(PropertyInfo info);
 }
-
-public sealed class AuditPropertyManager
+public sealed class AuditPropertyManager : IAuditPropertyManager
 {
+    public static readonly List<Type> FieldTypes = new List<Type>()
+    {
+        typeof(int),
+        typeof(int?),
+        typeof(long),
+        typeof(long?),
+        typeof(uint),
+        typeof(uint?),
+        typeof(ulong),
+        typeof(ulong?),
+        typeof(byte),
+        typeof(byte?),
+        typeof(sbyte),
+        typeof(sbyte?),
+        typeof(short),
+        typeof(short?),
+        typeof(bool),
+        typeof(bool?),
+        typeof(float),
+        typeof(float?),
+        typeof(double),
+        typeof(double?),
+        typeof(decimal),
+        typeof(decimal?),
+        typeof(string),
+        typeof(char),
+        typeof(char?),
+        typeof(DateTime),
+        typeof(DateTime?),
+        typeof(DateOnly),
+        typeof(DateOnly?),
+        typeof(TimeOnly),
+        typeof(TimeOnly?),
+    };
     //Just my interpretation of https://stackoverflow.com/questions/17660097/is-it-possible-to-speed-this-method-up/17669142#17669142
     public Func<object, object> CreatePropertyGetter(PropertyInfo info)
     {
