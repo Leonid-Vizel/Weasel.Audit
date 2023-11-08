@@ -6,12 +6,12 @@
     <Nullable>enable</Nullable>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <Title>$(AssemblyName)</Title>
-    <VersionPrefix>1.0.2</VersionPrefix>
+    <VersionPrefix>1.0.3</VersionPrefix>
     <Company>Vizel Leonid</Company>
     <Product>Weasel</Product>
     <Authors>Vizel Leonid</Authors>
     <Description>Interfaces for Weasel audit system</Description>
-    <PackageReleaseNotes>Added IAuditAction</PackageReleaseNotes>
+    <PackageReleaseNotes>All packages update</PackageReleaseNotes>
     <PackageIcon>weasel.png</PackageIcon>
     <RepositoryType>git</RepositoryType>
     <PackageTags>Weasel Audit</PackageTags>

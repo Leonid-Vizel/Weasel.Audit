@@ -5,5 +5,6 @@ public enum AuditPropertyDisplayMode
     List,
     Object,
     Field,
+    Enum,
     None
 }

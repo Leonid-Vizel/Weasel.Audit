@@ -6,12 +6,12 @@
     <Nullable>enable</Nullable>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <Title>$(AssemblyName)</Title>
-    <VersionPrefix>1.0.4</VersionPrefix>
+    <VersionPrefix>1.0.5</VersionPrefix>
     <Company>Vizel Leonid</Company>
     <Product>Weasel</Product>
     <Authors>Vizel Leonid</Authors>
     <Description>Weasel.Enums update</Description>
-    <PackageReleaseNotes>Class renaming</PackageReleaseNotes>
+    <PackageReleaseNotes>All packages update</PackageReleaseNotes>
     <PackageIcon>weasel.png</PackageIcon>
     <RepositoryType>git</RepositoryType>
     <PackageTags>Weasel Audit</PackageTags>
@@ -25,8 +25,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Weasel.Enums\Weasel.Enums.csproj" />
-    <ProjectReference Include="..\Weasel.Tools.Extensions.Common\Weasel.Tools.Extensions.Common.csproj" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.13" />
+    <PackageReference Include="Weasel.Enums" Version="1.0.2" />
+    <PackageReference Include="Weasel.Tools.Extensions.Common" Version="1.0.4" />
   </ItemGroup>
 
   <ItemGroup>

@@ -6,12 +6,12 @@
     <Nullable>enable</Nullable>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <Title>$(AssemblyName)</Title>
-    <VersionPrefix>1.0.2</VersionPrefix>
+    <VersionPrefix>1.0.3</VersionPrefix>
     <Company>Vizel Leonid</Company>
     <Product>Weasel</Product>
     <Authors>Vizel Leonid</Authors>
     <Description>Common EFCore functions for Weasel packages</Description>
-    <PackageReleaseNotes>Atrributes package update</PackageReleaseNotes>
+    <PackageReleaseNotes>All packages update</PackageReleaseNotes>
     <PackageIcon>weasel.png</PackageIcon>
     <RepositoryType>git</RepositoryType>
     <PackageTags>Weasel Audit</PackageTags>
@@ -44,11 +44,8 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.13" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\Weasel.Attributes\Weasel.Attributes.csproj" />
-    <ProjectReference Include="..\Weasel.Audit.Interfaces\Weasel.Audit.Interfaces.csproj" />
+    <PackageReference Include="Weasel.Attributes" Version="1.0.5" />
+    <PackageReference Include="Weasel.Audit.Interfaces" Version="1.0.3" />
   </ItemGroup>
 
 </Project>

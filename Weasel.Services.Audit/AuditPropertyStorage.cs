@@ -1,6 +1,8 @@
-﻿using System.Collections;
+﻿using ECRF.Tools.Actions.Interfaces;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Reflection;
+using Weasel.Attributes.Audit.AutoUpdate.Strategy;
 using Weasel.Attributes.Audit.Display;
 using Weasel.Attributes.Audit.Formatters;
 using Weasel.Attributes.Audit.Rows;
@@ -27,8 +29,12 @@ public struct AuditPropertyCache
 {
     public string Name { get; private set; } = null!;
     public Type Type { get; private set; } = null!;
+    public Type? InnerListType { get; private set; } = null!;
     public Func<object, object> Getter { get; private set; } = null!;
     public Action<object, object> Setter { get; private set; } = null!;
+    public AutoUpdateStrategyAttribute.CompareDelegate? CompareDelegate { get; private set; }
+    public AutoUpdateStrategyAttribute.SetValueDelegate? SetValueDelegate { get; private set; }
+    public AutoUpdateStrategyAttribute? AutoUpdateStrategy { get; private set; }
     public AuditValueFormatterAttribute? ValueFormatter { get; private set; }
     public AuditRowNamingRuleAttribute? RowNaming { get; private set; }
     public AuditPropertyDisplayMode DisplayMode { get; private set; }
@@ -43,6 +49,14 @@ public struct AuditPropertyCache
         {
             DisplayMode = AuditPropertyDisplayMode.None;
         }
+        else if (info.Name.EndsWith("Id") && info.GetCustomAttribute<AuditDisplayForceAttribute>() == null)
+        {
+            DisplayMode = AuditPropertyDisplayMode.None;
+        }
+        else if (Type.IsAssignableTo(typeof(Enum)))
+        {
+            DisplayMode = AuditPropertyDisplayMode.Enum;
+        }
         else if (AuditPropertyManager.FieldTypes.Contains(Type))
         {
             DisplayMode = AuditPropertyDisplayMode.Field;
@@ -50,15 +64,42 @@ public struct AuditPropertyCache
         else if (Type.IsAssignableTo(typeof(ICollection)))
         {
             DisplayMode = AuditPropertyDisplayMode.List;
+            InnerListType = info.PropertyType.GetGenericArguments()[0];
             RowNaming = info.GetCustomAttribute<AuditRowNamingRuleAttribute>();
         }
         Name = info.GetDisplayName() ?? info.Name;
+        if (info.GetCustomAttribute<AuditDisplayIgnoreAttribute>() != null)
+        {
+            DisplayMode = AuditPropertyDisplayMode.None;
+        }
+        else if (info.Name.EndsWith("Id") && info.GetCustomAttribute<AuditDisplayForceAttribute>() == null)
+        {
+            DisplayMode = AuditPropertyDisplayMode.None;
+        }
+        AutoUpdate = info.GetCustomAttribute<AuditDisplayIgnoreAttribute>() == null ||
+            (info.Name.EndsWith("Id") && info.GetCustomAttribute<AuditDisplayForceAttribute>() != null);
+        if (AutoUpdate)
+        {
+            var customStrategy = info.GetCustomAttribute<AutoUpdateStrategyAttribute>();
+            if (customStrategy == null)
+            {
+                CompareDelegate = StandartAutoUpdateStrategyAttribbute.CompareBoxedValues;
+                SetValueDelegate = StandartAutoUpdateStrategyAttribbute.StandartSetValue;
+            }
+            else
+            {
+                CompareDelegate = customStrategy.Compare;
+                SetValueDelegate = customStrategy.SetValue;
+            }
+        }
     }
 }
 
 public interface IAuditPropertyStorage
 {
     ConcurrentDictionary<AuditPropertyCacheKey, AuditPropertyCache> CachedProperties { get; }
+    List<AuditPropertyCache> GetAuditPropertyData<TAudit>(AuditPropertyManager manager);
+    List<AuditPropertyCache> GetAuditPropertyData(AuditPropertyManager manager, Type type);
 }
 public sealed class AuditPropertyStorage : IAuditPropertyStorage
 {
@@ -67,14 +108,19 @@ public sealed class AuditPropertyStorage : IAuditPropertyStorage
     {
         CachedProperties = new ConcurrentDictionary<AuditPropertyCacheKey, AuditPropertyCache>();
     }
+    public List<AuditPropertyCache> GetAuditPropertyData<TAudit>(AuditPropertyManager manager)
+        => GetAuditPropertyData(manager, typeof(TAudit));
 
-    public void GetAuditPropertyData<TAudit>() where TAudit : class
+    public List<AuditPropertyCache> GetAuditPropertyData(AuditPropertyManager manager, Type type)
     {
-        Type type = typeof(TAudit);
         var properties = type.GetProperties();
-        foreach (var property in properties)
+        List<AuditPropertyCache> data = new List<AuditPropertyCache>();
+        foreach (var info in properties)
         {
-            var ignore = property.GetCustomAttribute()
+            var key = new AuditPropertyCacheKey(info);
+            var createFunc = (AuditPropertyCacheKey key) => new AuditPropertyCache(manager, info);
+            var cache = CachedProperties.GetOrAdd(key, createFunc);
         }
+        return data;
     }
 }
