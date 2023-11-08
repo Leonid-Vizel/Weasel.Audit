@@ -5,15 +5,19 @@ VisualStudioVersion = 17.7.34024.191
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Weasel.Tools.Extensions.Common", "Weasel.Tools.Extensions.Common\Weasel.Tools.Extensions.Common.csproj", "{D3595E1D-433F-4F4F-9EBE-2D77939BEEA8}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Weasel.Tests", "Weasel.Tests\Weasel.Tests.csproj", "{9F5B7213-F757-4948-AB00-66E97578FB7A}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Weasel.TagHelpers", "Weasel.TagHelpers\Weasel.TagHelpers.csproj", "{4272F63D-D0FF-424A-B37E-AD6BAC4D56E1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Weasel.Enums", "Weasel.Enums\Weasel.Enums.csproj", "{6E6E6138-DA8D-4AE5-BC68-466ED265086C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Weasel.Enums", "Weasel.Enums\Weasel.Enums.csproj", "{6E6E6138-DA8D-4AE5-BC68-466ED265086C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Weasel.Attributes", "Weasel.Attributes\Weasel.Attributes.csproj", "{453217B4-7FFE-44BE-A076-9B89CCC75BDF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Weasel.Attributes", "Weasel.Attributes\Weasel.Attributes.csproj", "{453217B4-7FFE-44BE-A076-9B89CCC75BDF}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Weasel.Tools.Extensions.EFCore", "Weasel.Tools.Extensions.EFCore\Weasel.Tools.Extensions.EFCore.csproj", "{5475782A-2EB1-4490-8CE7-A513F3ED9800}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Weasel.Models.Audit", "Weasel.Models.Audit\Weasel.Models.Audit.csproj", "{58DAC9BC-FBF9-418D-B274-06894974382A}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Weasel.Audit.Interfaces", "Weasel.Audit.Interfaces\Weasel.Audit.Interfaces.csproj", "{C08486B7-32D8-43C3-BFA2-A0C25F850283}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Weasel.Services.Audit", "Weasel.Services.Audit\Weasel.Services.Audit.csproj", "{F981B741-377B-41A7-A676-A3DA919F02BE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -25,10 +29,6 @@ Global
 		{D3595E1D-433F-4F4F-9EBE-2D77939BEEA8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D3595E1D-433F-4F4F-9EBE-2D77939BEEA8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D3595E1D-433F-4F4F-9EBE-2D77939BEEA8}.Release|Any CPU.Build.0 = Release|Any CPU
-		{9F5B7213-F757-4948-AB00-66E97578FB7A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{9F5B7213-F757-4948-AB00-66E97578FB7A}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{9F5B7213-F757-4948-AB00-66E97578FB7A}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{9F5B7213-F757-4948-AB00-66E97578FB7A}.Release|Any CPU.Build.0 = Release|Any CPU
 		{4272F63D-D0FF-424A-B37E-AD6BAC4D56E1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{4272F63D-D0FF-424A-B37E-AD6BAC4D56E1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4272F63D-D0FF-424A-B37E-AD6BAC4D56E1}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -45,6 +45,18 @@ Global
 		{5475782A-2EB1-4490-8CE7-A513F3ED9800}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5475782A-2EB1-4490-8CE7-A513F3ED9800}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5475782A-2EB1-4490-8CE7-A513F3ED9800}.Release|Any CPU.Build.0 = Release|Any CPU
+		{58DAC9BC-FBF9-418D-B274-06894974382A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{58DAC9BC-FBF9-418D-B274-06894974382A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{58DAC9BC-FBF9-418D-B274-06894974382A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{58DAC9BC-FBF9-418D-B274-06894974382A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C08486B7-32D8-43C3-BFA2-A0C25F850283}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C08486B7-32D8-43C3-BFA2-A0C25F850283}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C08486B7-32D8-43C3-BFA2-A0C25F850283}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C08486B7-32D8-43C3-BFA2-A0C25F850283}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F981B741-377B-41A7-A676-A3DA919F02BE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F981B741-377B-41A7-A676-A3DA919F02BE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F981B741-377B-41A7-A676-A3DA919F02BE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F981B741-377B-41A7-A676-A3DA919F02BE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

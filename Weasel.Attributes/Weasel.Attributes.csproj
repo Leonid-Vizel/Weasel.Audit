@@ -6,12 +6,12 @@
     <Nullable>enable</Nullable>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <Title>$(AssemblyName)</Title>
-    <VersionPrefix>1.0.1</VersionPrefix>
+    <VersionPrefix>1.0.5</VersionPrefix>
     <Company>Vizel Leonid</Company>
     <Product>Weasel</Product>
     <Authors>Vizel Leonid</Authors>
-    <Description>Common attributes for Weasel packages</Description>
-    <PackageReleaseNotes>Audit attributes introduced</PackageReleaseNotes>
+    <Description>Weasel.Enums update</Description>
+    <PackageReleaseNotes>All packages update</PackageReleaseNotes>
     <PackageIcon>weasel.png</PackageIcon>
     <RepositoryType>git</RepositoryType>
     <PackageTags>Weasel Audit</PackageTags>
@@ -25,15 +25,16 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="..\Weasel.TagHelpers\weasel.png" Link="weasel.png">
-      <PackagePath>\</PackagePath>
-      <Pack>True</Pack>
-    </None>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.13" />
+    <PackageReference Include="Weasel.Enums" Version="1.0.2" />
+    <PackageReference Include="Weasel.Tools.Extensions.Common" Version="1.0.4" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Weasel.Enums" Version="1.0.0" />
-    <PackageReference Include="Weasel.Tools.Extensions.Common" Version="1.0.3" />
+    <None Update="weasel.png" Link="weasel.png">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
   </ItemGroup>
 
 </Project>

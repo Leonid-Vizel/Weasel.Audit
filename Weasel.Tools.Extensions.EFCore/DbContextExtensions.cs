@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore.Metadata;
 using System.Collections.Concurrent;
 using System.Reflection;
 using Weasel.Attributes;
+using Weasel.Audit.Interfaces;
 
 namespace Weasel.Tools.Extensions.EFCore;
 
@@ -12,10 +13,6 @@ public static class DbContextExtensions
         = new ConcurrentDictionary<IncludeAllCacheKey, List<string>>();
     private static readonly MethodInfo setMethod
         = typeof(DbContext).GetMethods().Single(p => p.Name == nameof(DbContext.Set) && p.ContainsGenericParameters && p.GetParameters().Length == 0);
-    private static readonly MethodInfo includeMethod
-        = typeof(EntityFrameworkQueryableExtensions)
-            .GetTypeInfo().GetDeclaredMethods("Include")
-            .Single(mi => mi.GetParameters().Any(pi => pi.Name == "navigationPropertyPath" && pi.ParameterType == typeof(string)));
 
     public static IEnumerable<string> GetIncludePaths<T>(this DbContext context, int depth = 20)
         => context.GetIncludePaths(typeof(T), depth);
@@ -76,9 +73,9 @@ public static class DbContextExtensions
             }
         }
     }
-    public static IQueryable? GetQueryable(this DbContext context, Type type)
-        => setMethod.MakeGenericMethod(type).Invoke(context, null) as IQueryable;
-    public static IQueryable IncludeAll(this DbContext context, Type type, int depth = 20)
+    public static IQueryable<IIntKeyedEntity>? GetQueryable(this DbContext context, Type type)
+        => setMethod.MakeGenericMethod(type).Invoke(context, null) as IQueryable<IIntKeyedEntity>;
+    public static IQueryable<IIntKeyedEntity> IncludeAll(this DbContext context, Type type, int depth = 20)
     {
         var query = context.GetQueryable(type);
         if (query == null)
@@ -88,7 +85,7 @@ public static class DbContextExtensions
         var paths = context.GetIncludePaths(type, depth);
         foreach (var path in paths)
         {
-            query = includeMethod.Invoke(query, new[] { path }) as IQueryable;
+            query = query.Include(path);
         }
         return query;
     }
