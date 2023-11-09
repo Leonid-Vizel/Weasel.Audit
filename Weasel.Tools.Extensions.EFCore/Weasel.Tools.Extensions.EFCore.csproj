@@ -29,16 +29,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="weasel.png" Link="weasel.png">
+    <None Include="..\weasel.png">
       <Pack>True</Pack>
       <PackagePath>\</PackagePath>
-    </None>
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Include="..\Weasel.Tools.Extensions.Common\weasel.png" Link="weasel.png">
-      <PackagePath>\</PackagePath>
-      <Pack>True</Pack>
     </None>
   </ItemGroup>
 
