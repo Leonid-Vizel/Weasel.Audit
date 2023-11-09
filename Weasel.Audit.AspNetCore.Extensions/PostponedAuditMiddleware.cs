@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Weasel.Audit.Services;
 
-namespace Weasel.Audit.AspNetCore.Middleware;
+namespace Weasel.Audit.AspNetCore.Extensions;
 
 public sealed class PostponedAuditMiddleware
 {

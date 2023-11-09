@@ -36,7 +36,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Weasel.Audit" Version="1.0.0" />
+    <PackageReference Include="Weasel.Audit.DependencyInjection.Extensions" Version="1.0.1" />
   </ItemGroup>
 
 </Project>

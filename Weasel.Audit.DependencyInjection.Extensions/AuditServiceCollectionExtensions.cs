@@ -3,7 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Weasel.Audit.Services;
 
-namespace Weasel.Audit.AspNetCore.Extensions;
+namespace Weasel.Audit.DependencyInjection.Extensions;
 
 public static class AuditServiceCollectionExtensions
 {

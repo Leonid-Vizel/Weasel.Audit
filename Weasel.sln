@@ -9,24 +9,28 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Weasel.TagHelpers", "Weasel
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Weasel.Tools.Extensions.EFCore", "Weasel.Tools.Extensions.EFCore\Weasel.Tools.Extensions.EFCore.csproj", "{5475782A-2EB1-4490-8CE7-A513F3ED9800}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Weasel.Audit", "Weasel.Audit\Weasel.Audit.csproj", "{B72715B3-8C74-460F-8A8B-159CE7810497}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Weasel.Audit", "Weasel.Audit\Weasel.Audit.csproj", "{B72715B3-8C74-460F-8A8B-159CE7810497}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Weasel.Audit.AspNetCore", "Weasel.Audit.AspNetCore\Weasel.Audit.AspNetCore.csproj", "{85634ABA-7B41-4490-9F10-F25B870AA9CD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Weasel.Audit.AspNetCore.Extensions", "Weasel.Audit.AspNetCore.Extensions\Weasel.Audit.AspNetCore.Extensions.csproj", "{85634ABA-7B41-4490-9F10-F25B870AA9CD}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Images", "Images", "{82ABFE72-7873-4E81-BFB5-AF193F3D2F1F}"
 	ProjectSection(SolutionItems) = preProject
 		weasel.png = weasel.png
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Weasel.Audit.Repositories", "Weasel.Audit.Repositories\Weasel.Audit.Repositories.csproj", "{6393EAFA-02E6-4E81-900A-50145D591BB9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Weasel.Audit.Repositories", "Weasel.Audit.Repositories\Weasel.Audit.Repositories.csproj", "{6393EAFA-02E6-4E81-900A-50145D591BB9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Weasel.Audit.UnitOfWorks", "Weasel.Audit.UnitOfWorks\Weasel.Audit.UnitOfWorks.csproj", "{22FA65BF-D3BF-46B7-A9E4-A8FFAF118E01}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Weasel.Audit.UnitOfWorks", "Weasel.Audit.UnitOfWorks\Weasel.Audit.UnitOfWorks.csproj", "{22FA65BF-D3BF-46B7-A9E4-A8FFAF118E01}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Weasel.Audit.CQRS", "Weasel.Audit.CQRS\Weasel.Audit.CQRS.csproj", "{D0784FC8-A48A-4C78-9765-1E1AB947D844}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Weasel.Audit.CQRS", "Weasel.Audit.CQRS\Weasel.Audit.CQRS.csproj", "{D0784FC8-A48A-4C78-9765-1E1AB947D844}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "DataBase", "DataBase", "{A5B35C6E-C347-4A58-AA56-37CEAB80E2F4}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Platforms", "Platforms", "{0287182B-97D6-4676-BB82-C5EFF1905089}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Weasel.Audit.DependencyInjection.Extensions", "Weasel.Audit.DependencyInjection.Extensions\Weasel.Audit.DependencyInjection.Extensions.csproj", "{F5D7ACFF-1BF3-42AD-B5B8-3CB01B5C1012}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Weasel.Audit.WinForms.Extensions", "Weasel.Audit.WinForms.Extensions\Weasel.Audit.WinForms.Extensions.csproj", "{B64D9FD3-16B8-4144-B97C-BC49A746A4ED}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -66,6 +70,14 @@ Global
 		{D0784FC8-A48A-4C78-9765-1E1AB947D844}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D0784FC8-A48A-4C78-9765-1E1AB947D844}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D0784FC8-A48A-4C78-9765-1E1AB947D844}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F5D7ACFF-1BF3-42AD-B5B8-3CB01B5C1012}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F5D7ACFF-1BF3-42AD-B5B8-3CB01B5C1012}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F5D7ACFF-1BF3-42AD-B5B8-3CB01B5C1012}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F5D7ACFF-1BF3-42AD-B5B8-3CB01B5C1012}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B64D9FD3-16B8-4144-B97C-BC49A746A4ED}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B64D9FD3-16B8-4144-B97C-BC49A746A4ED}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B64D9FD3-16B8-4144-B97C-BC49A746A4ED}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B64D9FD3-16B8-4144-B97C-BC49A746A4ED}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -75,6 +87,8 @@ Global
 		{6393EAFA-02E6-4E81-900A-50145D591BB9} = {A5B35C6E-C347-4A58-AA56-37CEAB80E2F4}
 		{22FA65BF-D3BF-46B7-A9E4-A8FFAF118E01} = {A5B35C6E-C347-4A58-AA56-37CEAB80E2F4}
 		{D0784FC8-A48A-4C78-9765-1E1AB947D844} = {A5B35C6E-C347-4A58-AA56-37CEAB80E2F4}
+		{F5D7ACFF-1BF3-42AD-B5B8-3CB01B5C1012} = {0287182B-97D6-4676-BB82-C5EFF1905089}
+		{B64D9FD3-16B8-4144-B97C-BC49A746A4ED} = {0287182B-97D6-4676-BB82-C5EFF1905089}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {FCD83288-407C-444F-B693-00C0F821B532}

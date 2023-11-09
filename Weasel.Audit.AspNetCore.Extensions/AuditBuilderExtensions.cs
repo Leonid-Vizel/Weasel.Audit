@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Builder;
-using Weasel.Audit.AspNetCore.Middleware;
 
 namespace Weasel.Audit.AspNetCore.Extensions;
 
