@@ -14,6 +14,9 @@ public interface IAuditPropertyManager
     IAuditPropertyStorage Storage { get; }
     Func<object, object> CreatePropertyGetter(PropertyInfo info);
     Action<object, object> CreatePropertySetter(PropertyInfo info);
+    void PerformCustomUpdate<T>(DbContext context, T old, T update) where T : ICustomUpdatable<T>;
+    void PerformAutoUpdate<T>(DbContext context, T old, T update);
+    ActionIndexItem[] GetEntityDisplayData(Type type, object? model);
 }
 public sealed class AuditPropertyManager : IAuditPropertyManager
 {
