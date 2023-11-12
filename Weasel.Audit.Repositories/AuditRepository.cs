@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query;
+using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Logging;
 using System.Linq.Expressions;
 using Weasel.Audit.Interfaces;
@@ -11,12 +12,9 @@ public interface IAuditRepository<T, TAudit>
     where T : class, IIntKeyedEntity, IAuditable<TAudit>
     where TAudit : class, IIntKeyedEntity
 {
-    protected DbSet<T> Set { get; }
-    protected DbSet<TAudit> ActionSet { get; }
-    protected DbContext DataBase { get; }
-    protected IPostponedAuditManager AuditManager { get; }
-    protected IAuditPropertyManager PropertyManager { get; }
-    protected ILogger Logger { get; }
+    DbContext DataBase { get; }
+    IPostponedAuditManager AuditManager { get; }
+    IAuditPropertyManager PropertyManager { get; }
 
     Task AddAsync(T model, int? userId, string? overrideLogin = null, Enum? overrideColor = null);
     Task AddCustomAsync(T model, int? userId, Enum customType, string? overrideLogin = null, Enum? overrideColor = null);
@@ -75,10 +73,10 @@ public class AuditRepository<T, TAudit> : IAuditRepository<T, TAudit>
 {
     protected DbSet<T> Set { get; private set; }
     protected DbSet<TAudit> ActionSet { get; private set; }
-    protected DbContext DataBase { get; private set; }
-    protected IPostponedAuditManager AuditManager { get; private set; }
-    protected IAuditPropertyManager PropertyManager { get; private set; }
     protected ILogger Logger { get; private set; }
+    public DbContext DataBase { get; private set; }
+    public IPostponedAuditManager AuditManager { get; private set; }
+    public IAuditPropertyManager PropertyManager { get; private set; }
 
     public AuditRepository(DbContext context, ILoggerFactory loggerFactory, IPostponedAuditManager auditManager, IAuditPropertyManager propertyManager)
     {
@@ -129,10 +127,22 @@ public class AuditRepository<T, TAudit> : IAuditRepository<T, TAudit>
         AuditManager.PostponeCreateRange<T, TAudit>(models, userId, customType, overrideLogin, overrideColor);
     }
 
+    private void Update(T oldModel, T newModel)
+    {
+        if (oldModel is ICustomUpdatable<T> oldCustomUpdatable)
+        {
+            oldCustomUpdatable.Update(newModel, DataBase);
+        }
+        else
+        {
+            PropertyManager.PerformAutoUpdate(DataBase, oldModel, newModel);
+        }
+    }
+
     public async Task UpdateAsync(T oldModel, T newModel, int? userId, string? overrideLogin = null, Enum? overrideColor = null)
     {
         await CallBeforeUpdate(oldModel, newModel);
-        oldModel.Update(newModel, DataBase);
+        Update(oldModel, newModel);
         if (DataBase.Entry(oldModel).State != EntityState.Modified)
         {
             return;
@@ -143,7 +153,7 @@ public class AuditRepository<T, TAudit> : IAuditRepository<T, TAudit>
     public async Task UpdateCustomAsync(T oldModel, T newModel, int? userId, Enum customType, string? overrideLogin = null, Enum? overrideColor = null)
     {
         await CallBeforeUpdate(oldModel, newModel);
-        oldModel.Update(newModel, DataBase);
+        Update(oldModel, newModel);
         if (DataBase.Entry(oldModel).State != EntityState.Modified)
         {
             return;

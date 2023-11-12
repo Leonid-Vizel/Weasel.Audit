@@ -6,12 +6,12 @@
     <Nullable>enable</Nullable>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <Title>$(AssemblyName)</Title>
-    <VersionPrefix>1.0.1</VersionPrefix>
+    <VersionPrefix>1.0.2</VersionPrefix>
     <Company>Vizel Leonid</Company>
     <Product>Weasel</Product>
     <Authors>Vizel Leonid</Authors>
     <Description>Weasel.Audit general extensions for DepenencyInjection</Description>
-    <PackageReleaseNotes>All packages update</PackageReleaseNotes>
+    <PackageReleaseNotes>Dependency update</PackageReleaseNotes>
     <PackageIcon>weasel.png</PackageIcon>
     <RepositoryType>git</RepositoryType>
     <PackageTags>Weasel Audit</PackageTags>
@@ -32,7 +32,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Weasel.Audit" Version="1.0.0" />
+    <PackageReference Include="Weasel.Audit" Version="1.0.1" />
   </ItemGroup>
 
 </Project>

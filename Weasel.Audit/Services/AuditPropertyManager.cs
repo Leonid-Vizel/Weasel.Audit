@@ -2,7 +2,6 @@
 using System.Collections;
 using System.Linq.Expressions;
 using System.Reflection;
-using Weasel.Audit.Interfaces;
 using Weasel.Audit.Models;
 using Weasel.Enums;
 using Weasel.Tools.Extensions.Common;
@@ -14,8 +13,8 @@ public interface IAuditPropertyManager
     IAuditPropertyStorage Storage { get; }
     Func<object, object> CreatePropertyGetter(PropertyInfo info);
     Action<object, object> CreatePropertySetter(PropertyInfo info);
-    void PerformCustomUpdate<T>(DbContext context, T old, T update) where T : ICustomUpdatable<T>;
     void PerformAutoUpdate<T>(DbContext context, T old, T update);
+    void PerformAutoUpdateRange<T>(DbContext context, List<Tuple<T, T>> updatePairs);
     ActionIndexItem[] GetEntityDisplayData(Type type, object? model);
 }
 public sealed class AuditPropertyManager : IAuditPropertyManager
@@ -87,8 +86,6 @@ public sealed class AuditPropertyManager : IAuditPropertyManager
         var lambda = Expression.Lambda<Action<object, object>>(exBody, exInstance, exValue);
         return lambda.Compile();
     }
-    public void PerformCustomUpdate<T>(DbContext context, T old, T update) where T : ICustomUpdatable<T>
-        => old.Update(update, context);
     public void PerformAutoUpdate<T>(DbContext context, T old, T update)
     {
         if (old == null || update == null)
@@ -104,6 +101,33 @@ public sealed class AuditPropertyManager : IAuditPropertyManager
             {
                 object? setValue = prop.SetValueDelegate?.Invoke(context, old, update, oldValue, updateValue) ?? updateValue;
                 prop.Setter.Invoke(old, setValue);
+            }
+        }
+    }
+    public void PerformAutoUpdateRange<T>(DbContext context, List<Tuple<T, T>> updatePairs)
+    {
+        if (updatePairs.Count == 0)
+        {
+            return;
+        }
+        var props = Storage.GetAuditPropertyData(this, typeof(T)).Where(x => x.AutoUpdate).ToArray();
+        foreach (var pair in updatePairs)
+        {
+            var old = pair.Item1;
+            var update = pair.Item2;
+            if (old == null || update == null)
+            {
+                continue;
+            }
+            foreach (var prop in props)
+            {
+                object? oldValue = prop.Getter.Invoke(old);
+                object? updateValue = prop.Getter.Invoke(update);
+                if (prop.CompareDelegate?.Invoke(context, old, update, oldValue, updateValue) ?? false)
+                {
+                    object? setValue = prop.SetValueDelegate?.Invoke(context, old, update, oldValue, updateValue) ?? updateValue;
+                    prop.Setter.Invoke(old, setValue);
+                }
             }
         }
     }
