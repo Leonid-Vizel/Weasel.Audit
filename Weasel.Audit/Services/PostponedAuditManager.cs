@@ -1,8 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Weasel.Audit.Enums;
 using Weasel.Audit.Interfaces;
-using Weasel.Enums;
 
 namespace Weasel.Audit.Services;
 public struct PostponedAuditStorageKey

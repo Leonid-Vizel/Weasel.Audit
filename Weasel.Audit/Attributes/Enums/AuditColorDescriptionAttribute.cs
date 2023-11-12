@@ -1,5 +1,6 @@
 ﻿namespace Weasel.Audit.Attributes.Enums;
 
+[AttributeUsage(AttributeTargets.Field)]
 public sealed class AuditColorDescriptionAttribute : Attribute
 {
     public string? TableTrClass { get; private set; }

@@ -1,10 +1,9 @@
-﻿namespace Weasel.Enums;
+﻿namespace Weasel.Audit.Enums;
 
 public enum AuditPropertyDisplayMode
 {
-    List,
+    Collection,
     Object,
     Field,
-    Enum,
     None
 }

@@ -1,9 +1,11 @@
-﻿namespace Weasel.Audit.Models;
+﻿using System.Collections.Generic;
 
-public sealed class ActionIndexItem
+namespace Weasel.Audit.Models;
+
+public sealed class AuditPropertyDisplayModel
 {
-    public ActionIndexItem() : base() { }
-    public ActionIndexItem(string name) : this()
+    public AuditPropertyDisplayModel() : base() { }
+    public AuditPropertyDisplayModel(string name) : this()
     {
         Name = name;
     }
@@ -12,13 +14,13 @@ public sealed class ActionIndexItem
     public object? Value { get; set; }
     public bool Changed { get; set; }
 
-    public bool Equals(ActionIndexItem obj)
+    public bool Equals(AuditPropertyDisplayModel obj)
     {
-        ActionIndexItem[]? oldArray = Value as ActionIndexItem[];
-        ActionIndexItem[]? newArray = obj.Value as ActionIndexItem[];
+        List<AuditPropertyDisplayModel>? oldArray = Value as List<AuditPropertyDisplayModel>;
+        List<AuditPropertyDisplayModel>? newArray = obj.Value as List<AuditPropertyDisplayModel>;
         if (oldArray != null && newArray != null)
         {
-            int range = Math.Min(oldArray.Length, newArray.Length);
+            int range = Math.Min(oldArray.Count, newArray.Count);
             bool equal = true;
             for (int i = 0; i < range; i++)
             {

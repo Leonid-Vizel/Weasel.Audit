@@ -1,6 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query;
-using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Logging;
 using System.Linq.Expressions;
 using Weasel.Audit.Interfaces;
@@ -173,7 +172,7 @@ public class AuditRepository<T, TAudit> : IAuditRepository<T, TAudit>
             T oldModel = model.Item1;
             T newModel = model.Item2;
             await CallBeforeUpdate(oldModel, newModel);
-            oldModel.Update(newModel, DataBase);
+            Update(oldModel, newModel);
             if (DataBase.Entry(oldModel).State != EntityState.Modified)
             {
                 continue;
@@ -199,7 +198,7 @@ public class AuditRepository<T, TAudit> : IAuditRepository<T, TAudit>
             T oldModel = model.Item1;
             T newModel = model.Item2;
             await CallBeforeUpdate(oldModel, newModel);
-            oldModel.Update(newModel, DataBase);
+            Update(oldModel, newModel);
             if (DataBase.Entry(oldModel).State != EntityState.Modified)
             {
                 continue;

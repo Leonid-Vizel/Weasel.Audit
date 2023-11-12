@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Weasel.Audit.Enums;
 using Weasel.Audit.Interfaces;
-using Weasel.Enums;
 
 namespace Weasel.Audit.Services;
 
