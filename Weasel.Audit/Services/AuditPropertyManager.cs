@@ -2,12 +2,9 @@
 using System.Collections;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Security.Cryptography;
 using Weasel.Audit.Enums;
 using Weasel.Audit.Interfaces;
 using Weasel.Audit.Models;
-using Weasel.Tools.Extensions.Common;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace Weasel.Audit.Services;
 
@@ -17,7 +14,7 @@ public interface IAuditPropertyManager
     Func<object, object> CreatePropertyGetter(PropertyInfo info);
     Action<object, object> CreatePropertySetter(PropertyInfo info);
     void PerformUpdate<T>(DbContext context, T old, T update);
-    void PerformUpdateRange<T>(DbContext context, List<Tuple<T, T>> updateData);
+    void PerformUpdateRange<T>(DbContext context, IReadOnlyList<Tuple<T, T>> updateData);
     List<AuditPropertyDisplayModel> GetEntityDisplayData(Type type, object? model);
 }
 public sealed class AuditPropertyManager : IAuditPropertyManager
@@ -83,7 +80,7 @@ public sealed class AuditPropertyManager : IAuditPropertyManager
             }
         }
     }
-    public void PerformUpdateRange<T>(DbContext context, List<Tuple<T, T>> updateData)
+    public void PerformUpdateRange<T>(DbContext context, IReadOnlyList<Tuple<T, T>> updateData)
     {
         if (context == null)
         {

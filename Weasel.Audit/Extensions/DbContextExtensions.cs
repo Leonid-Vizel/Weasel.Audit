@@ -2,10 +2,21 @@
 using Microsoft.EntityFrameworkCore.Metadata;
 using System.Collections.Concurrent;
 using System.Reflection;
-using Weasel.Attributes;
+using Weasel.Audit.Attributes;
 using Weasel.Audit.Interfaces;
 
 namespace Weasel.Tools.Extensions.EFCore;
+
+public struct IncludeAllCacheKey
+{
+    public Type Type { get; private set; }
+    public int Depth { get; private set; }
+    public IncludeAllCacheKey(Type type, int depth)
+    {
+        Type = type;
+        Depth = depth;
+    }
+}
 
 public static class DbContextExtensions
 {

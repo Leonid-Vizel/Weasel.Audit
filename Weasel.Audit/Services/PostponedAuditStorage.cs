@@ -162,7 +162,7 @@ public sealed class PostponedAuditStorage<T, TAudit> : IPosponedActionsStorage
             _updateActions.Add(new PostponedUpdateActionData<TAudit>(modelData.Model.Id, oldAction, newAction, modelData.UserId, modelData.ActionType, modelData.OverrideLogin, modelData.OverrideColor));
         }
     }
-    private async Task PlanDeleteActionsAsync(DbContext context, List<TAudit> list)
+    private async Task PlanDeleteActionsAsync(DbContext context)
     {
         if (_deleteModels.Count == 0)
         {
@@ -181,7 +181,7 @@ public sealed class PostponedAuditStorage<T, TAudit> : IPosponedActionsStorage
 
         await PlanAddActionsAsync(context, actionAddList);
         await PlanUpdateActionsAsync(context, actionAddList);
-        await PlanDeleteActionsAsync(context, actionAddList);
+        await PlanDeleteActionsAsync(context);
 
         await context.AddRangeAsync(actionAddList);
     }
