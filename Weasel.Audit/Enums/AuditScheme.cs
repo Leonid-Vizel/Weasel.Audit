@@ -1,4 +1,4 @@
-﻿namespace Weasel.Enums;
+﻿namespace Weasel.Audit.Enums;
 
 public enum AuditScheme
 {

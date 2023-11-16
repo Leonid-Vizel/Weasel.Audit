@@ -2,10 +2,9 @@
 using System.Collections;
 using System.Linq.Expressions;
 using System.Reflection;
+using Weasel.Audit.Enums;
 using Weasel.Audit.Interfaces;
 using Weasel.Audit.Models;
-using Weasel.Enums;
-using Weasel.Tools.Extensions.Common;
 
 namespace Weasel.Audit.Services;
 
@@ -14,50 +13,17 @@ public interface IAuditPropertyManager
     IAuditPropertyStorage Storage { get; }
     Func<object, object> CreatePropertyGetter(PropertyInfo info);
     Action<object, object> CreatePropertySetter(PropertyInfo info);
+    void PerformUpdate<T>(DbContext context, T old, T update);
+    void PerformUpdateRange<T>(DbContext context, IReadOnlyList<Tuple<T, T>> updateData);
+    List<AuditPropertyDisplayModel> GetEntityDisplayData(Type type, object? model);
 }
 public sealed class AuditPropertyManager : IAuditPropertyManager
 {
-    public static readonly List<Type> FieldTypes = new List<Type>()
-    {
-        typeof(int),
-        typeof(int?),
-        typeof(long),
-        typeof(long?),
-        typeof(uint),
-        typeof(uint?),
-        typeof(ulong),
-        typeof(ulong?),
-        typeof(byte),
-        typeof(byte?),
-        typeof(sbyte),
-        typeof(sbyte?),
-        typeof(short),
-        typeof(short?),
-        typeof(bool),
-        typeof(bool?),
-        typeof(float),
-        typeof(float?),
-        typeof(double),
-        typeof(double?),
-        typeof(decimal),
-        typeof(decimal?),
-        typeof(string),
-        typeof(char),
-        typeof(char?),
-        typeof(DateTime),
-        typeof(DateTime?),
-        typeof(DateOnly),
-        typeof(DateOnly?),
-        typeof(TimeOnly),
-        typeof(TimeOnly?),
-    };
     public IAuditPropertyStorage Storage { get; private set; }
     public AuditPropertyManager(IAuditPropertyStorage storage)
     {
         Storage = storage;
     }
-
-    //Just my interpretation of https://stackoverflow.com/questions/17660097/is-it-possible-to-speed-this-method-up/17669142#17669142
     public Func<object, object> CreatePropertyGetter(PropertyInfo info)
     {
         if (info.DeclaringType == null)
@@ -84,83 +50,129 @@ public sealed class AuditPropertyManager : IAuditPropertyManager
         var lambda = Expression.Lambda<Action<object, object>>(exBody, exInstance, exValue);
         return lambda.Compile();
     }
-    public void PerformCustomUpdate<T>(DbContext context, T old, T update) where T : ICustomUpdatable<T>
-        => old.Update(update, context);
-    public void PerformAutoUpdate<T>(DbContext context, T old, T update)
+    public void PerformUpdate<T>(DbContext context, T old, T update)
     {
-        if (old == null || update == null)
+        if (context == null)
         {
-            return;
+            throw new ArgumentNullException(nameof(context));
         }
-        var props = Storage.GetAuditPropertyData(this, typeof(T)).Where(x => x.AutoUpdate).ToArray();
+        if (old == null)
+        {
+            throw new ArgumentNullException(nameof(old));
+        }
+        if (update == null)
+        {
+            throw new ArgumentNullException(nameof(update));
+        }
+        if (old is ICustomUpdatable<T> oldUpdatable)
+        {
+            oldUpdatable.Update(update, context);
+        }
+        var props = Storage.GetAuditPropertyData(this, typeof(T));
         foreach (var prop in props)
         {
             object? oldValue = prop.Getter.Invoke(old);
             object? updateValue = prop.Getter.Invoke(update);
-            if (prop.CompareDelegate?.Invoke(context, old, update, oldValue, updateValue) ?? false)
+            if (prop.UpdateStrategy.Compare(context, old, update, oldValue, updateValue))
             {
-                object? setValue = prop.SetValueDelegate?.Invoke(context, old, update, oldValue, updateValue) ?? updateValue;
+                object? setValue = prop.UpdateStrategy.SetValue(context, old, update, oldValue, updateValue) ?? updateValue;
                 prop.Setter.Invoke(old, setValue);
             }
         }
     }
-    public ActionIndexItem[] GetEntityDisplayData(Type type, object? model)
+    public void PerformUpdateRange<T>(DbContext context, IReadOnlyList<Tuple<T, T>> updateData)
     {
-        var props = Storage.GetAuditPropertyData(this, type).Where(x => x.DisplayMode != AuditPropertyDisplayMode.None).ToArray();
-        ActionIndexItem[] items = new ActionIndexItem[props.Length];
-        for (int i = 0; i < props.Length; i++)
+        if (context == null)
         {
-            var prop = props[i];
-            object? value = model == null ? null : prop.Getter.Invoke(model);
-            object? processedValue = ProcessValue(prop, value);
-            if (prop.ValueFormatter != null)
-            {
-                processedValue = prop.ValueFormatter.FormatValue(processedValue);
-            }
-            var item = new ActionIndexItem()
-            {
-                Value = processedValue,
-                Name = prop.Name,
-            };
-            items[i] = item;
+            throw new ArgumentNullException(nameof(context));
         }
-        return items;
-    }
-    private object? ProcessValue(AuditPropertyCache prop, object? value)
-    {
-        switch (prop.DisplayMode)
+        if (updateData == null)
         {
-            case AuditPropertyDisplayMode.List:
-                IList? innerValues = value as IList;
-                if (innerValues == null || prop.InnerListType == null || innerValues.Count == 0)
+            throw new ArgumentNullException(nameof(updateData));
+        }
+        bool performCustom = typeof(T).IsAssignableTo(typeof(ICustomUpdatable<T>));
+        var props = Storage.GetAuditPropertyData(this, typeof(T));
+        foreach (var pair in updateData)
+        {
+            var old = pair.Item1;
+            var update = pair.Item2;
+            if (old == null)
+            {
+                throw new ArgumentNullException(nameof(old));
+            }
+            if (update == null)
+            {
+                throw new ArgumentNullException(nameof(update));
+            }
+            if (performCustom)
+            {
+                (old as ICustomUpdatable<T>)?.Update(update, context);
+            }
+            foreach (var prop in props)
+            {
+                object? oldValue = prop.Getter.Invoke(old);
+                object? updateValue = prop.Getter.Invoke(update);
+                if (prop.UpdateStrategy.Compare(context, old, update, oldValue, updateValue))
                 {
-                    return new ActionIndexItem[0];
+                    object? setValue = prop.UpdateStrategy.SetValue(context, old, update, oldValue, updateValue) ?? updateValue;
+                    prop.Setter.Invoke(old, setValue);
                 }
-                ActionIndexItem[] items = new ActionIndexItem[innerValues.Count];
-                int counter = 0;
-                for (int i = 0; i < innerValues.Count; i++)
+            }
+        }
+    }
+    private object? GetPropertyDisplayModels(AuditPropertyCache prop, object? declare, object? value)
+    {
+        var mode = prop.GetDisplayMode(declare, value);
+        switch (mode)
+        {
+            case AuditPropertyDisplayMode.Collection:
+                ICollection? values = value as ICollection;
+                if (values == null || values.Count == 0)
                 {
-                    var innerValue = innerValues[i];
-                    var name = prop.RowNaming?.Process(counter) ?? $"Строка #{counter + 1}";
-                    counter++;
-                    items[i] = new ActionIndexItem(name)
+                    return new List<AuditPropertyDisplayModel>();
+                }
+                var models = new List<AuditPropertyDisplayModel>();
+                int index = 0;
+                foreach (var collection in values)
+                {
+                    var name = prop.GetRowName(index++, declare, value);
+                    models.Add(new AuditPropertyDisplayModel()
                     {
-                        Value = innerValue != null ? GetEntityDisplayData(prop.InnerListType, innerValue) : null
-                    };
+                        Name = prop.GetRowName(index++, declare, value),
+                        Value = GetEntityDisplayData(prop.Info.PropertyType, value)
+                    });
                 }
-                return items;
+                return models;
             case AuditPropertyDisplayMode.Object:
                 if (value == null)
                 {
-                    return new ActionIndexItem[0];
+                    return new List<AuditPropertyDisplayModel>();
                 }
-                return GetEntityDisplayData(prop.Type, value);
+                return GetEntityDisplayData(prop.Info.PropertyType, value);
             case AuditPropertyDisplayMode.Field:
                 return value;
-            case AuditPropertyDisplayMode.Enum:
-                return (value as Enum)?.GetDisplayName() ?? null;
             default:
-                return new ActionIndexItem[0];
+                return new List<AuditPropertyDisplayModel>();
         }
+    }
+    public List<AuditPropertyDisplayModel> GetEntityDisplayData(Type type, object? model)
+    {
+        var props = Storage.GetAuditPropertyData(this, type);
+        List<AuditPropertyDisplayModel> items = new List<AuditPropertyDisplayModel>();
+        foreach (var prop in props)
+        {
+            object? value = model == null ? null : prop.Getter.Invoke(model);
+            object? formattedValue = prop.DisplayStrategy.FormatValue(prop.Info, model, value);
+            if (prop.GetDisplayMode(model, formattedValue) == AuditPropertyDisplayMode.None)
+            {
+                continue;
+            }
+            items.Add(new AuditPropertyDisplayModel()
+            {
+                Value = GetPropertyDisplayModels(prop, model, formattedValue),
+                Name = prop.Name,
+            });
+        }
+        return items;
     }
 }

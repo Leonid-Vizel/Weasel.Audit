@@ -1,6 +1,6 @@
 ﻿using System.Reflection;
 using Weasel.Audit.Attributes.Search;
-using Weasel.Enums;
+using Weasel.Audit.Enums;
 
 namespace Weasel.Audit.Attributes.Enums;
 

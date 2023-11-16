@@ -1,11 +1,9 @@
-﻿using System.Collections;
+﻿using Microsoft.EntityFrameworkCore;
 using System.Collections.Concurrent;
 using System.Reflection;
-using Weasel.Audit.Attributes.AutoUpdate.Strategy;
+using Weasel.Audit.Attributes.AuditUpdate;
 using Weasel.Audit.Attributes.Display;
-using Weasel.Audit.Attributes.Formatters;
-using Weasel.Audit.Attributes.Rows;
-using Weasel.Enums;
+using Weasel.Audit.Enums;
 using Weasel.Tools.Extensions.Common;
 
 namespace Weasel.Audit.Services;
@@ -27,71 +25,36 @@ public struct AuditPropertyCacheKey
 public struct AuditPropertyCache
 {
     public string Name { get; private set; } = null!;
-    public Type Type { get; private set; } = null!;
-    public Type? InnerListType { get; private set; } = null!;
+    public PropertyInfo Info { get; private set; } = null!;
     public Func<object, object> Getter { get; private set; } = null!;
     public Action<object, object> Setter { get; private set; } = null!;
-    public AutoUpdateStrategyAttribute.CompareDelegate? CompareDelegate { get; private set; }
-    public AutoUpdateStrategyAttribute.SetValueDelegate? SetValueDelegate { get; private set; }
-    public AutoUpdateStrategyAttribute? AutoUpdateStrategy { get; private set; }
-    public AuditValueFormatterAttribute? ValueFormatter { get; private set; }
-    public AuditRowNamingRuleAttribute? RowNaming { get; private set; }
-    public AuditPropertyDisplayMode DisplayMode { get; private set; }
-    public bool AutoUpdate { get; private set; }
+    public AuditUpdateStrategyAttribute UpdateStrategy { get; private set; }
+    public AuditDisplayStrategyAttribute DisplayStrategy { get; private set; }
     public AuditPropertyCache(AuditPropertyManager manager, PropertyInfo info)
     {
-        Type = info.PropertyType;
+        Info = info;
         Getter = manager.CreatePropertyGetter(info);
         Setter = manager.CreatePropertySetter(info);
-        ValueFormatter = info.GetCustomAttribute<AuditValueFormatterAttribute>();
-        if (info.GetCustomAttribute<AuditDisplayIgnoreAttribute>() != null)
-        {
-            DisplayMode = AuditPropertyDisplayMode.None;
-        }
-        else if (info.Name.EndsWith("Id") && info.GetCustomAttribute<AuditDisplayForceAttribute>() == null)
-        {
-            DisplayMode = AuditPropertyDisplayMode.None;
-        }
-        else if (Type.IsAssignableTo(typeof(Enum)))
-        {
-            DisplayMode = AuditPropertyDisplayMode.Enum;
-        }
-        else if (AuditPropertyManager.FieldTypes.Contains(Type))
-        {
-            DisplayMode = AuditPropertyDisplayMode.Field;
-        }
-        else if (Type.IsAssignableTo(typeof(ICollection)))
-        {
-            DisplayMode = AuditPropertyDisplayMode.List;
-            InnerListType = info.PropertyType.GetGenericArguments()[0];
-            RowNaming = info.GetCustomAttribute<AuditRowNamingRuleAttribute>();
-        }
         Name = info.GetDisplayName() ?? info.Name;
-        if (info.GetCustomAttribute<AuditDisplayIgnoreAttribute>() != null)
-        {
-            DisplayMode = AuditPropertyDisplayMode.None;
-        }
-        else if (info.Name.EndsWith("Id") && info.GetCustomAttribute<AuditDisplayForceAttribute>() == null)
-        {
-            DisplayMode = AuditPropertyDisplayMode.None;
-        }
-        AutoUpdate = info.GetCustomAttribute<AuditDisplayIgnoreAttribute>() == null ||
-            info.Name.EndsWith("Id") && info.GetCustomAttribute<AuditDisplayForceAttribute>() != null;
-        if (AutoUpdate)
-        {
-            var customStrategy = info.GetCustomAttribute<AutoUpdateStrategyAttribute>();
-            if (customStrategy == null)
-            {
-                CompareDelegate = StandartAutoUpdateStrategyAttribbute.CompareBoxedValues;
-                SetValueDelegate = StandartAutoUpdateStrategyAttribbute.StandartSetValue;
-            }
-            else
-            {
-                CompareDelegate = customStrategy.Compare;
-                SetValueDelegate = customStrategy.SetValue;
-            }
-        }
+        UpdateStrategy = info.GetCustomAttribute<AuditUpdateStrategyAttribute>() ??
+            info.DeclaringType?.GetCustomAttribute<AuditUpdateStrategyAttribute>() ??
+            new StandartAuditUpdateAttribute();
+        DisplayStrategy = info.GetCustomAttribute<AuditDisplayStrategyAttribute>() ??
+            info.DeclaringType?.GetCustomAttribute<AuditDisplayStrategyAttribute>() ??
+            new StandartAuditDisplayAttribute();
     }
+    public AuditPropertyDisplayMode GetDisplayMode(object? declare, object? value)
+        => DisplayStrategy.GetDisplayMode(Info, declare, value);
+    public string GetRowName(int index, object? declare, object? value)
+        => DisplayStrategy.GetRowName(index, Info, declare, value);
+    public object? FormatValue(object? declare, object? value)
+        => DisplayStrategy.GetDisplayMode(Info, declare, value);
+    public Type? GetCollectionType(object? declare, object? value)
+        => DisplayStrategy.GetCollectionType(Info, declare, value);
+    public bool Compare(DbContext context, object? old, object? update, object? oldValue, object? updateValue)
+        => UpdateStrategy.Compare(context, old, update, oldValue, updateValue);
+    public object? SetValue(DbContext context, object? old, object? update, object? oldValue, object? updateValue)
+        => UpdateStrategy.SetValue(context, old, update, oldValue, updateValue);
 }
 
 public interface IAuditPropertyStorage
