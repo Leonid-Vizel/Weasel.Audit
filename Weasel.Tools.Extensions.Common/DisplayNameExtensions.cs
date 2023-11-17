@@ -71,8 +71,14 @@ public static class DisplayNameExtensions
     public static string? GetDisplayName<T>(string propertyName)
         => typeof(T).GetDisplayName(propertyName);
 
+    public static string? GetDisplayName<T>(Expression<Func<T, object?>> lambda)
+        => lambda.GetPropertyInfo()?.GetDisplayName();
+
     public static string GetDisplayNameNonNull<T>(string propertyName, string nullValue = "")
         => typeof(T).GetDisplayName(propertyName) ?? nullValue;
+
+    public static string GetDisplayNameNonNull<T>(Expression<Func<T, object?>> lambda, string nullValue = "")
+        => lambda.GetPropertyInfo()?.GetDisplayName() ?? nullValue;
 
     public static string? GetDisplayName(this Type objType, string propertyName)
     {
@@ -111,6 +117,7 @@ public static class DisplayNameExtensions
 
     public static string? GetDisplayName(this PropertyInfo propInfo)
         => propInfo.GetCustomAttributes<DisplayNameAttribute>()?.FirstOrDefault()?.DisplayName;
+
     public static string GetDisplayNameMonNull(this PropertyInfo propInfo, string nullValue = "")
         => propInfo.GetDisplayName() ?? nullValue;
     #endregion
