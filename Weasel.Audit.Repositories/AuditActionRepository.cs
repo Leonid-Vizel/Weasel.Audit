@@ -6,7 +6,7 @@ using Weasel.Audit.Services;
 
 namespace Weasel.Audit.Repositories;
 
-public interface IDataAuditRepository : IStandartRepository<IAuditAction>
+public interface IAuditActionRepository : IStandartRepository<IAuditAction>
 {
     IAuditPropertyManager PropertyManager { get; }
     Task<IAuditAction?> FindAsync(int id);
@@ -16,12 +16,12 @@ public interface IDataAuditRepository : IStandartRepository<IAuditAction>
     Task<ActionIndexModel?> GetIndexAsync(int id);
 }
 
-public sealed class DataAuditRepository : StandartRepository<IAuditAction>, IDataAuditRepository
+public sealed class AuditActionRepository : StandartRepository<IAuditAction>, IAuditActionRepository
 {
     public IAuditSchemeManager SchemeManager { get; private set; }
     public IAuditPropertyManager PropertyManager { get; private set; }
     public IServiceProvider ServiceProvider { get; private set; }
-    public DataAuditRepository(DbContext context, IAuditSchemeManager schemeManager, IAuditPropertyManager propertyManager, IServiceProvider serviceProvider) : base(context)
+    public AuditActionRepository(DbContext context, IAuditSchemeManager schemeManager, IAuditPropertyManager propertyManager, IServiceProvider serviceProvider) : base(context)
     {
         SchemeManager = schemeManager;
         PropertyManager = propertyManager;

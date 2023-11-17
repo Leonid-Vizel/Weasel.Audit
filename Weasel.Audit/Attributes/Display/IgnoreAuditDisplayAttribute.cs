@@ -1,6 +1,5 @@
 ﻿using System.Reflection;
 using Weasel.Audit.Enums;
-using Weasel.Audit.Services;
 
 namespace Weasel.Audit.Attributes.Display;
 

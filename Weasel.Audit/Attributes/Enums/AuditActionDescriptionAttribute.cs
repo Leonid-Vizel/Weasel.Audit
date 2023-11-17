@@ -4,8 +4,7 @@ using Weasel.Audit.Enums;
 
 namespace Weasel.Audit.Attributes.Enums;
 
-[AttributeUsage(AttributeTargets.Field)]
-public sealed class AuditActionDescriptionAttribute : Attribute
+public abstract class AuditActionDescriptionAttribute : Attribute
 {
     public Enum Journal { get; private set; }
     public string Name { get; private set; }
@@ -25,4 +24,13 @@ public sealed class AuditActionDescriptionAttribute : Attribute
         SearchTypeName = customName?.SearchName ?? Type.Name.ToLower();
         SearchUrlTypeName = customName?.SearchUrlName ?? Type.Name;
     }
+}
+
+[AttributeUsage(AttributeTargets.Field)]
+public sealed class AuditActionDescriptionAttribute<TJournal, TColor> : AuditActionDescriptionAttribute
+    where TJournal : Enum
+    where TColor : Enum
+{
+    public AuditActionDescriptionAttribute(TJournal journal, string name, TColor color, AuditScheme scheme, Type type)
+        : base(journal, name, color, scheme, type) { }
 }
