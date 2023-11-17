@@ -7,7 +7,7 @@ namespace Weasel.Audit.DependencyInjection.Extensions;
 
 public static class AuditServiceCollectionExtensions
 {
-    public static IServiceCollection AddResponseCompression<TDbContext, TFactoryImplementation>(this IServiceCollection services)
+    public static IServiceCollection AddAudit<TDbContext, TFactoryImplementation>(this IServiceCollection services)
         where TFactoryImplementation : class, IAuditActionFactory
         where TDbContext : DbContext
     {

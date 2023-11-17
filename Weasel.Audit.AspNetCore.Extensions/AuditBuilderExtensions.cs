@@ -4,7 +4,7 @@ namespace Weasel.Audit.AspNetCore.Extensions;
 
 public static class AuditBuilderExtensions
 {
-    public static IApplicationBuilder UseResponseCompression(this IApplicationBuilder builder)
+    public static IApplicationBuilder UseAudit(this IApplicationBuilder builder)
     {
         if (builder == null)
         {
