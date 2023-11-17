@@ -118,7 +118,7 @@ public static class DisplayNameExtensions
     public static string? GetDisplayName(this PropertyInfo propInfo)
         => propInfo.GetCustomAttributes<DisplayNameAttribute>()?.FirstOrDefault()?.DisplayName;
 
-    public static string GetDisplayNameMonNull(this PropertyInfo propInfo, string nullValue = "")
+    public static string GetDisplayNameNonNull(this PropertyInfo propInfo, string nullValue = "")
         => propInfo.GetDisplayName() ?? nullValue;
     #endregion
 
