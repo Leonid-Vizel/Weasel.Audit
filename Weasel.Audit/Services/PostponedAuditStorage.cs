@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Weasel.Audit.Enums;
+using Weasel.Audit.Extensions;
 using Weasel.Audit.Interfaces;
 
 namespace Weasel.Audit.Services;
@@ -7,14 +8,14 @@ namespace Weasel.Audit.Services;
 public struct PostponedModelData<T> where T : class
 {
     public T Model { get; private set; }
-    public int? UserId { get; private set; }
     public Enum ActionType { get; private set; }
+    public object? Additional { get; private set; }
     public string? OverrideLogin { get; private set; }
     public Enum? OverrideColor { get; private set; }
-    public PostponedModelData(T model, int? userId, Enum actionType, string? overrideLogin, Enum? overrideColor)
+    public PostponedModelData(T model, Enum actionType, object? additional = null, string? overrideLogin = null, Enum? overrideColor = null)
     {
         Model = model;
-        UserId = userId;
+        Additional = additional;
         ActionType = actionType;
         OverrideLogin = overrideLogin;
         OverrideColor = overrideColor;
@@ -22,41 +23,46 @@ public struct PostponedModelData<T> where T : class
 }
 public struct PostponedInfoActionData<TAudit> where TAudit : class
 {
-    public int EntityId { get; private set; }
+    public string EntityId { get; private set; }
     public TAudit Action { get; private set; }
-    public int? UserId { get; private set; }
     public Enum ActionType { get; private set; }
+    public object? Additional { get; private set; }
     public string? OverrideLogin { get; private set; }
     public Enum? OverrideColor { get; private set; }
-    public PostponedInfoActionData(int entityId, TAudit action, int? userId, Enum actionType, string? overrideLogin, Enum? overrideColor)
+    public PostponedInfoActionData(string entityId, TAudit action, Enum actionType, object? additional = null, string? overrideLogin = null, Enum? overrideColor = null)
     {
         EntityId = entityId;
         Action = action;
-        UserId = userId;
+        Additional = additional;
         ActionType = actionType;
         OverrideLogin = overrideLogin;
         OverrideColor = overrideColor;
     }
+
+    public static PostponedInfoActionData<TAudit> Create<T>(string entityId, TAudit action, PostponedModelData<T> data) where T : class
+        => new PostponedInfoActionData<TAudit>(entityId, action, data.ActionType, data.Additional, data.OverrideLogin, data.OverrideColor);
 }
 public struct PostponedUpdateActionData<TAudit> where TAudit : class
 {
-    public int EntityId { get; private set; }
+    public string EntityId { get; private set; }
     public TAudit OldAction { get; private set; }
-    public TAudit NewAction { get; private set; }
-    public int? UserId { get; private set; }
+    public TAudit UpdateAction { get; private set; }
     public Enum ActionType { get; private set; }
+    public object? Additional { get; private set; }
     public string? OverrideLogin { get; private set; }
     public Enum? OverrideColor { get; private set; }
-    public PostponedUpdateActionData(int entityId, TAudit oldAction, TAudit newAction, int? userId, Enum actionType, string? overrideLogin, Enum? overrideColor)
+    public PostponedUpdateActionData(string entityId, TAudit oldAction, TAudit updateAction, Enum actionType, object? additional = null, string? overrideLogin = null, Enum? overrideColor = null)
     {
         EntityId = entityId;
         OldAction = oldAction;
-        NewAction = newAction;
-        UserId = userId;
+        UpdateAction = updateAction;
+        Additional = additional;
         ActionType = actionType;
         OverrideLogin = overrideLogin;
         OverrideColor = overrideColor;
     }
+    public static PostponedUpdateActionData<TAudit> Create<T>(string entityId, TAudit oldAction, TAudit updateAction, PostponedModelData<T> data) where T : class
+        => new PostponedUpdateActionData<TAudit>(entityId, oldAction, updateAction, data.ActionType, data.Additional, data.OverrideLogin, data.OverrideColor);
 }
 
 public interface IPosponedActionsStorage
@@ -69,7 +75,7 @@ public interface IPosponedActionsStorage
     void LoadDataActions(List<IAuditAction> list);
 }
 public sealed class PostponedAuditStorage<T, TAudit> : IPosponedActionsStorage
-    where T : class, IIntKeyedEntity, IAuditable<TAudit>
+    where T : class, IAuditable<TAudit>
     where TAudit : class, IIntKeyedEntity
 {
     private List<PostponedModelData<T>> _createModels;
@@ -103,32 +109,41 @@ public sealed class PostponedAuditStorage<T, TAudit> : IPosponedActionsStorage
     #region Anknowledge
     public async Task<TAudit> PostponeAnknowledgeAction(DbContext context, T model)
     {
+        if (context == null)
+        {
+            throw new ArgumentNullException(nameof(context));
+        }
+        if (model == null)
+        {
+            throw new ArgumentNullException(nameof(model));
+        }
         TAudit audit = await model.AuditAsync(context, PostponedAuditManager);
         Enum actionType = SchemeManager.GetFirstSchemaAuditType<TAudit>(null, AuditScheme.Aknowledge);
-        _aknowledgeActions.Add(new PostponedInfoActionData<TAudit>(model.Id, audit, null, actionType, "AKNOWLEDGE", null));
+        string entityId = context.GetAuditEntityId(model);
+        _aknowledgeActions.Add(new PostponedInfoActionData<TAudit>(entityId, audit, actionType, null, "AKNOWLEDGE", null));
         return audit;
     }
     #endregion
 
     #region Create
-    public void PostponeCreate(T model, int? userId, Enum type, string? overrideLogin = null, Enum? overrideColor = null)
-        => _createModels.Add(new PostponedModelData<T>(model, userId, type, overrideLogin, overrideColor));
-    public void PostponeCreateRange(IEnumerable<T> models, int? userId, Enum type, string? overrideLogin = null, Enum? overrideColor = null)
-        => _createModels.AddRange(models.Select(x => new PostponedModelData<T>(x, userId, type, overrideLogin, overrideColor)));
+    public void PostponeCreate(T model, Enum type, object? additional = null, string? overrideLogin = null, Enum? overrideColor = null)
+        => _createModels.Add(new PostponedModelData<T>(model, type, additional, overrideLogin, overrideColor));
+    public void PostponeCreateRange(IEnumerable<T> models, Enum type, object? additional = null, string? overrideLogin = null, Enum? overrideColor = null)
+        => _createModels.AddRange(models.Select(x => new PostponedModelData<T>(x, type, additional, overrideLogin, overrideColor)));
     #endregion
 
     #region Update
-    public void PostponeUpdate(T model, int? userId, Enum type, string? overrideLogin = null, Enum? overrideColor = null)
-        => _updateModels.Add(new PostponedModelData<T>(model, userId, type, overrideLogin, overrideColor));
-    public void PostponeUpdateRange(IEnumerable<T> models, int? userId, Enum type, string? overrideLogin = null, Enum? overrideColor = null)
-        => _updateModels.AddRange(models.Select(x => new PostponedModelData<T>(x, userId, type, overrideLogin, overrideColor)));
+    public void PostponeUpdate(T model, Enum type, object? additional = null, string? overrideLogin = null, Enum? overrideColor = null)
+        => _updateModels.Add(new PostponedModelData<T>(model, type, additional, overrideLogin, overrideColor));
+    public void PostponeUpdateRange(IEnumerable<T> models, Enum type, object? additional = null, string? overrideLogin = null, Enum? overrideColor = null)
+        => _updateModels.AddRange(models.Select(x => new PostponedModelData<T>(x, type, additional, overrideLogin, overrideColor)));
     #endregion
 
     #region Delete
-    public void PostponeDelete(T model, int? userId, Enum type, string? overrideLogin = null, Enum? overrideColor = null)
-        => _deleteModels.Add(new PostponedModelData<T>(model, userId, type, overrideLogin, overrideColor));
-    public void PostponeDeleteRange(IEnumerable<T> models, int? userId, Enum type, string? overrideLogin = null, Enum? overrideColor = null)
-        => _deleteModels.AddRange(models.Select(x => new PostponedModelData<T>(x, userId, type, overrideLogin, overrideColor)));
+    public void PostponeDelete(T model, Enum type, object? additional = null, string? overrideLogin = null, Enum? overrideColor = null)
+        => _deleteModels.Add(new PostponedModelData<T>(model, type, additional, overrideLogin, overrideColor));
+    public void PostponeDeleteRange(IEnumerable<T> models, Enum type, object? additional = null, string? overrideLogin = null, Enum? overrideColor = null)
+        => _deleteModels.AddRange(models.Select(x => new PostponedModelData<T>(x, type, additional, overrideLogin, overrideColor)));
     #endregion
 
     #region PlanPerformActions
@@ -141,9 +156,11 @@ public sealed class PostponedAuditStorage<T, TAudit> : IPosponedActionsStorage
 
         foreach (var modelData in _createModels)
         {
-            TAudit action = await modelData.Model.AuditAsync(context, PostponedAuditManager);
+            var model = modelData.Model;
+            TAudit action = await model.AuditAsync(context, PostponedAuditManager);
             list.Add(action);
-            _createActions.Add(new PostponedInfoActionData<TAudit>(modelData.Model.Id, action, modelData.UserId, modelData.ActionType, modelData.OverrideLogin, modelData.OverrideColor));
+            string entityId = context.GetAuditEntityId(model);
+            _createActions.Add(PostponedInfoActionData<TAudit>.Create(entityId, action, modelData));
         }
     }
     private async Task PlanUpdateActionsAsync(DbContext context, List<TAudit> list)
@@ -155,11 +172,13 @@ public sealed class PostponedAuditStorage<T, TAudit> : IPosponedActionsStorage
 
         foreach (var modelData in _updateModels)
         {
-            TAudit oldAction = await StateManager.GetLastAction<T, TAudit>(context, modelData.Model);
-            TAudit newAction = await modelData.Model.AuditAsync(context, PostponedAuditManager);
+            var model = modelData.Model;
+            TAudit oldAction = await StateManager.GetLastAction<T, TAudit>(context, model);
+            TAudit newAction = await model.AuditAsync(context, PostponedAuditManager);
             list.Add(newAction);
-            StateManager.CommitState(modelData.Model.Id, newAction);
-            _updateActions.Add(new PostponedUpdateActionData<TAudit>(modelData.Model.Id, oldAction, newAction, modelData.UserId, modelData.ActionType, modelData.OverrideLogin, modelData.OverrideColor));
+            var entityId = context.GetAuditEntityId(model);
+            StateManager.CommitState(entityId, newAction);
+            _updateActions.Add(PostponedUpdateActionData<TAudit>.Create(entityId, oldAction, newAction, modelData));
         }
     }
     private async Task PlanDeleteActionsAsync(DbContext context)
@@ -171,8 +190,10 @@ public sealed class PostponedAuditStorage<T, TAudit> : IPosponedActionsStorage
 
         foreach (var modelData in _deleteModels)
         {
-            TAudit action = await StateManager.GetLastAction<T, TAudit>(context, modelData.Model);
-            _deleteActions.Add(new PostponedInfoActionData<TAudit>(modelData.Model.Id, action, modelData.UserId, modelData.ActionType, modelData.OverrideLogin, modelData.OverrideColor));
+            var model = modelData.Model;
+            TAudit action = await StateManager.GetLastAction<T, TAudit>(context, model);
+            var entityId = context.GetAuditEntityId(model);
+            _deleteActions.Add(PostponedInfoActionData<TAudit>.Create(entityId, action, modelData));
         }
     }
     public async Task PlanPerformActionsAsync(DbContext context)
@@ -196,7 +217,7 @@ public sealed class PostponedAuditStorage<T, TAudit> : IPosponedActionsStorage
         }
         foreach (var modelData in _aknowledgeActions)
         {
-            var resultAction = ActionFactory.CreateIntAuditAction(modelData.ActionType, modelData.EntityId, modelData.UserId, modelData.Action.Id, null, modelData.OverrideLogin, modelData.OverrideColor, DateTime.Now);
+            var resultAction = ActionFactory.CreateAuditAction(modelData.ActionType, modelData.EntityId, modelData.Additional, modelData.Action.Id, null, modelData.OverrideLogin, modelData.OverrideColor);
             list.Add(resultAction);
         }
     }
@@ -208,7 +229,7 @@ public sealed class PostponedAuditStorage<T, TAudit> : IPosponedActionsStorage
         }
         foreach (var modelData in _createActions)
         {
-            var resultAction = ActionFactory.CreateIntAuditAction(modelData.ActionType, modelData.EntityId, modelData.UserId, modelData.Action.Id, null, modelData.OverrideLogin, modelData.OverrideColor, DateTime.Now);
+            var resultAction = ActionFactory.CreateAuditAction(modelData.ActionType, modelData.EntityId, modelData.Additional, modelData.Action.Id, null, modelData.OverrideLogin, modelData.OverrideColor);
             list.Add(resultAction);
         }
     }
@@ -220,7 +241,7 @@ public sealed class PostponedAuditStorage<T, TAudit> : IPosponedActionsStorage
         }
         foreach (var modelData in _updateActions)
         {
-            var resultAction = ActionFactory.CreateIntAuditAction(modelData.ActionType, modelData.EntityId, modelData.UserId, modelData.NewAction.Id, modelData.OldAction.Id, modelData.OverrideLogin, null, DateTime.Now);
+            var resultAction = ActionFactory.CreateAuditAction(modelData.ActionType, modelData.EntityId, modelData.Additional, modelData.UpdateAction.Id, modelData.OldAction.Id, modelData.OverrideLogin, modelData.OverrideColor);
             list.Add(resultAction);
         }
     }
@@ -232,7 +253,7 @@ public sealed class PostponedAuditStorage<T, TAudit> : IPosponedActionsStorage
         }
         foreach (var modelData in _deleteActions)
         {
-            var resultAction = ActionFactory.CreateIntAuditAction(modelData.ActionType, modelData.EntityId, modelData.UserId, null, modelData.Action.Id, modelData.OverrideLogin, null, DateTime.Now);
+            var resultAction = ActionFactory.CreateAuditAction(modelData.ActionType, modelData.EntityId, modelData.Additional, null, modelData.Action.Id, modelData.OverrideLogin, modelData.OverrideColor);
             list.Add(resultAction);
         }
     }

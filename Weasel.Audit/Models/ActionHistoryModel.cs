@@ -6,16 +6,16 @@ public sealed class ActionHistoryModel
 {
     public Type Type { get; set; } = null!;
     public string TypeName { get; set; } = null!;
-    public int Entity { get; set; }
-    public List<ActionHistoryPageModel> Actions { get; set; } = null!;
+    public string EntityId { get; set; } = null!;
+    public List<ActionIndexModel> Actions { get; set; } = null!;
 
     public ActionHistoryModel() : base()
     {
-        Actions = new List<ActionHistoryPageModel>();
+        Actions = new List<ActionIndexModel>();
     }
-    public ActionHistoryModel(Type type, int entity) : this()
+    public ActionHistoryModel(Type type, string entityId) : this()
     {
-        Entity = entity;
+        EntityId = entityId;
         Type = type;
         TypeName = Type.GetDisplayName() ?? type.Name;
     }

@@ -2,10 +2,11 @@
 using Microsoft.EntityFrameworkCore.Metadata;
 using System.Collections.Concurrent;
 using System.Reflection;
+using System.Text.Json;
 using Weasel.Audit.Attributes;
 using Weasel.Audit.Interfaces;
 
-namespace Weasel.Tools.Extensions.EFCore;
+namespace Weasel.Audit.Extensions;
 
 public struct IncludeAllCacheKey
 {
@@ -22,6 +23,8 @@ public static class DbContextExtensions
 {
     private static ConcurrentDictionary<IncludeAllCacheKey, List<string>> _actionIncludePaths
         = new ConcurrentDictionary<IncludeAllCacheKey, List<string>>();
+    private static ConcurrentDictionary<Type, IReadOnlyList<IProperty>> _typePrimaryKeys
+        = new ConcurrentDictionary<Type, IReadOnlyList<IProperty>>();
     private static readonly MethodInfo setMethod
         = typeof(DbContext).GetMethods().Single(p => p.Name == nameof(DbContext.Set) && p.ContainsGenericParameters && p.GetParameters().Length == 0);
 
@@ -32,7 +35,7 @@ public static class DbContextExtensions
         var key = new IncludeAllCacheKey(type, depth);
         if (!_actionIncludePaths.TryGetValue(key, out var list))
         {
-            list = CalculateIncludePaths(context, type, depth).ToList();
+            list = context.CalculateIncludePaths(type, depth).ToList();
             _actionIncludePaths.TryAdd(key, list);
         }
         return list;
@@ -84,11 +87,11 @@ public static class DbContextExtensions
             }
         }
     }
-    public static IQueryable<IIntKeyedEntity>? GetQueryable(this DbContext context, Type type)
+    public static IQueryable<IIntKeyedEntity>? GetIntKeyedQueryable(this DbContext context, Type type)
         => setMethod.MakeGenericMethod(type).Invoke(context, null) as IQueryable<IIntKeyedEntity>;
-    public static IQueryable<IIntKeyedEntity> IncludeAll(this DbContext context, Type type, int depth = 20)
+    public static IQueryable<IIntKeyedEntity> IncludeAllIntKeyed(this DbContext context, Type type, int depth = 20)
     {
-        var query = context.GetQueryable(type);
+        var query = context.GetIntKeyedQueryable(type);
         if (query == null)
         {
             throw new Exception($"Cant get set of {type.FullName} from passed DbContext instance");
@@ -99,5 +102,51 @@ public static class DbContextExtensions
             query = query.Include(path);
         }
         return query;
+    }
+    public static string GetAuditEntityId(this DbContext context, object model)
+    {
+        if (context == null)
+        {
+            throw new ArgumentNullException(nameof(context));
+        }
+        if (model == null)
+        {
+            throw new ArgumentNullException(nameof(model));
+        }
+        var entry = context.Entry(model);
+        var properties = context.FindEntityPrimaryKeys(model);
+        string?[] keys = new string[properties.Count];
+        for (int i = 0; i < properties.Count; i++)
+        {
+            keys[i] = entry.Property(properties[i]).CurrentValue?.ToString();
+        }
+        return JsonSerializer.Serialize(keys);
+    }
+    public static IReadOnlyList<IProperty> FindEntityPrimaryKeys(this DbContext context, object model)
+    {
+        if (context == null)
+        {
+            throw new ArgumentNullException(nameof(context));
+        }
+        if (model == null)
+        {
+            throw new ArgumentNullException(nameof(model));
+        }
+        Type type = model.GetType();
+        if (_typePrimaryKeys.TryGetValue(type, out var list))
+        {
+            return list;
+        }
+        var entityType = context.Model.FindEntityType(type);
+        if (entityType == null)
+        {
+            throw new Exception($"EF EntityType for '{type.FullName}' not found!");
+        }
+        var primaryKey = entityType.FindPrimaryKey();
+        if (primaryKey == null)
+        {
+            throw new Exception($"EF primary key for '{type.FullName}' not found!");
+        }
+        return primaryKey.Properties;
     }
 }

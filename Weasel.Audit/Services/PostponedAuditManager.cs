@@ -23,28 +23,28 @@ public interface IPostponedAuditManager
     IAuditSchemeManager SchemeManager { get; }
     IAuditStateStorage GlobalStateStorage { get; }
     PostponedAuditStorage<T, TAudit> GetOrAddStorage<T, TAudit>()
-        where T : class, IIntKeyedEntity, IAuditable<TAudit>
+        where T : class, IAuditable<TAudit>
         where TAudit : class, IIntKeyedEntity;
     Task<TAudit> PlanAknowledgeAsync<T, TAudit>(DbContext context, T model)
-        where T : class, IIntKeyedEntity, IAuditable<TAudit>
+        where T : class, IAuditable<TAudit>
         where TAudit : class, IIntKeyedEntity;
-    void PostponeCreate<T, TAudit>(T model, int? userId, Enum? type, string? overrideLogin = null, Enum? overrideColor = null, bool custom = false)
-        where T : class, IIntKeyedEntity, IAuditable<TAudit>
+    void PostponeCreate<T, TAudit>(T model, Enum? type = null, object? additional = null, string? overrideLogin = null, Enum? overrideColor = null, bool custom = false)
+        where T : class, IAuditable<TAudit>
         where TAudit : class, IIntKeyedEntity;
-    void PostponeCreateRange<T, TAudit>(IEnumerable<T> models, int? userId, Enum? type, string? overrideLogin = null, Enum? overrideColor = null, bool custom = false)
-        where T : class, IIntKeyedEntity, IAuditable<TAudit>
+    void PostponeCreateRange<T, TAudit>(IEnumerable<T> models, Enum? type = null, object? additional = null, string? overrideLogin = null, Enum? overrideColor = null, bool custom = false)
+        where T : class, IAuditable<TAudit>
         where TAudit : class, IIntKeyedEntity;
-    void PostponeUpdate<T, TAudit>(T model, int? userId, Enum? type, string? overrideLogin = null, Enum? overrideColor = null, bool custom = false)
-        where T : class, IIntKeyedEntity, IAuditable<TAudit>
+    void PostponeUpdate<T, TAudit>(T model, Enum? type = null, object? additional = null, string? overrideLogin = null, Enum? overrideColor = null, bool custom = false)
+        where T : class, IAuditable<TAudit>
         where TAudit : class, IIntKeyedEntity;
-    void PostponeUpdateRange<T, TAudit>(IEnumerable<T> models, int? userId, Enum? type, string? overrideLogin = null, Enum? overrideColor = null, bool custom = false)
-        where T : class, IIntKeyedEntity, IAuditable<TAudit>
+    void PostponeUpdateRange<T, TAudit>(IEnumerable<T> models, Enum? type = null, object? additional = null, string? overrideLogin = null, Enum? overrideColor = null, bool custom = false)
+        where T : class, IAuditable<TAudit>
         where TAudit : class, IIntKeyedEntity;
-    void PostponeDelete<T, TAudit>(T model, int? userId, Enum? type, string? overrideLogin = null, Enum? overrideColor = null, bool custom = false)
-        where T : class, IIntKeyedEntity, IAuditable<TAudit>
+    void PostponeDelete<T, TAudit>(T model, Enum? type = null, object? additional = null, string? overrideLogin = null, Enum? overrideColor = null, bool custom = false)
+        where T : class, IAuditable<TAudit>
         where TAudit : class, IIntKeyedEntity;
-    void PostponeDeleteRange<T, TAudit>(IEnumerable<T> models, int? userId, Enum? type, string? overrideLogin = null, Enum? overrideColor = null, bool custom = false)
-        where T : class, IIntKeyedEntity, IAuditable<TAudit>
+    void PostponeDeleteRange<T, TAudit>(IEnumerable<T> models, Enum? type = null, object? additional = null, string? overrideLogin = null, Enum? overrideColor = null, bool custom = false)
+        where T : class, IAuditable<TAudit>
         where TAudit : class, IIntKeyedEntity;
     Task ExecuteAndDispose();
 }
@@ -69,7 +69,7 @@ public sealed class PostponedAuditManager<TContext> : IPostponedAuditManager whe
     }
 
     public PostponedAuditStorage<T, TAudit> GetOrAddStorage<T, TAudit>()
-        where T : class, IIntKeyedEntity, IAuditable<TAudit>
+        where T : class, IAuditable<TAudit>
         where TAudit : class, IIntKeyedEntity
     {
         var key = new PostponedAuditStorageKey(typeof(T), typeof(TAudit));
@@ -83,42 +83,72 @@ public sealed class PostponedAuditManager<TContext> : IPostponedAuditManager whe
 
     #region Aknowledge
     public async Task<TAudit> PlanAknowledgeAsync<T, TAudit>(DbContext context, T model)
-        where T : class, IIntKeyedEntity, IAuditable<TAudit>
+        where T : class, IAuditable<TAudit>
         where TAudit : class, IIntKeyedEntity
         => await GetOrAddStorage<T, TAudit>().PostponeAnknowledgeAction(context, model);
     #endregion
 
     #region Create
-    public void PostponeCreate<T, TAudit>(T model, int? userId, Enum? type, string? overrideLogin = null, Enum? overrideColor = null, bool custom = false)
-        where T : class, IIntKeyedEntity, IAuditable<TAudit>
+    public void PostponeCreate<T, TAudit>(T model, Enum? type, object? additional = null, string? overrideLogin = null, Enum? overrideColor = null, bool custom = false)
+        where T : class, IAuditable<TAudit>
         where TAudit : class, IIntKeyedEntity
-        => GetOrAddStorage<T, TAudit>().PostponeCreate(model, userId, SchemeManager.GetFirstSchemaAuditType<TAudit>(type, custom ? AuditScheme.CustomCreate : AuditScheme.Create), overrideLogin, overrideColor);
-    public void PostponeCreateRange<T, TAudit>(IEnumerable<T> models, int? userId, Enum? type, string? overrideLogin = null, Enum? overrideColor = null, bool custom = false)
-        where T : class, IIntKeyedEntity, IAuditable<TAudit>
+    {
+        var storage = GetOrAddStorage<T, TAudit>();
+        var scheme = custom ? AuditScheme.CustomCreate : AuditScheme.Create;
+        type = type ?? SchemeManager.GetFirstSchemaAuditType<TAudit>(type, scheme);
+        storage.PostponeCreate(model, type, additional, overrideLogin, overrideColor);
+    }
+    public void PostponeCreateRange<T, TAudit>(IEnumerable<T> models, Enum? type, object? additional = null, string? overrideLogin = null, Enum? overrideColor = null, bool custom = false)
+        where T : class, IAuditable<TAudit>
         where TAudit : class, IIntKeyedEntity
-        => GetOrAddStorage<T, TAudit>().PostponeCreateRange(models, userId, SchemeManager.GetFirstSchemaAuditType<TAudit>(type, custom ? AuditScheme.CustomCreate : AuditScheme.Create), overrideLogin, overrideColor);
+    {
+        var storage = GetOrAddStorage<T, TAudit>();
+        var scheme = custom ? AuditScheme.CustomCreate : AuditScheme.Create;
+        type = type ?? SchemeManager.GetFirstSchemaAuditType<TAudit>(type, scheme);
+        storage.PostponeCreateRange(models, type, additional, overrideLogin, overrideColor);
+    }
     #endregion
 
     #region Update
-    public void PostponeUpdate<T, TAudit>(T model, int? userId, Enum? type, string? overrideLogin = null, Enum? overrideColor = null, bool custom = false)
-        where T : class, IIntKeyedEntity, IAuditable<TAudit>
+    public void PostponeUpdate<T, TAudit>(T model, Enum? type = null, object? additional = null, string? overrideLogin = null, Enum? overrideColor = null, bool custom = false)
+        where T : class, IAuditable<TAudit>
         where TAudit : class, IIntKeyedEntity
-        => GetOrAddStorage<T, TAudit>().PostponeUpdate(model, userId, SchemeManager.GetFirstSchemaAuditType<TAudit>(type, custom ? AuditScheme.CustomUpdate : AuditScheme.Update), overrideLogin, overrideColor);
-    public void PostponeUpdateRange<T, TAudit>(IEnumerable<T> models, int? userId, Enum? type, string? overrideLogin = null, Enum? overrideColor = null, bool custom = false)
-        where T : class, IIntKeyedEntity, IAuditable<TAudit>
+    {
+        var storage = GetOrAddStorage<T, TAudit>();
+        var scheme = custom ? AuditScheme.CustomUpdate : AuditScheme.Update;
+        type = type ?? SchemeManager.GetFirstSchemaAuditType<TAudit>(type, scheme);
+        storage.PostponeUpdate(model, type, additional, overrideLogin, overrideColor);
+    }
+    public void PostponeUpdateRange<T, TAudit>(IEnumerable<T> models, Enum? type = null, object? additional = null, string? overrideLogin = null, Enum? overrideColor = null, bool custom = false)
+        where T : class, IAuditable<TAudit>
         where TAudit : class, IIntKeyedEntity
-        => GetOrAddStorage<T, TAudit>().PostponeUpdateRange(models, userId, SchemeManager.GetFirstSchemaAuditType<TAudit>(type, custom ? AuditScheme.CustomUpdate : AuditScheme.Update), overrideLogin, overrideColor);
+    {
+        var storage = GetOrAddStorage<T, TAudit>();
+        var scheme = custom ? AuditScheme.CustomUpdate : AuditScheme.Update;
+        type = type ?? SchemeManager.GetFirstSchemaAuditType<TAudit>(type, scheme);
+        storage.PostponeUpdateRange(models, type, additional, overrideLogin, overrideColor);
+    }
     #endregion
 
     #region Delete
-    public void PostponeDelete<T, TAudit>(T model, int? userId, Enum? type, string? overrideLogin = null, Enum? overrideColor = null, bool custom = false)
-        where T : class, IIntKeyedEntity, IAuditable<TAudit>
+    public void PostponeDelete<T, TAudit>(T model, Enum? type = null, object? additional = null, string? overrideLogin = null, Enum? overrideColor = null, bool custom = false)
+        where T : class, IAuditable<TAudit>
         where TAudit : class, IIntKeyedEntity
-        => GetOrAddStorage<T, TAudit>().PostponeDelete(model, userId, SchemeManager.GetFirstSchemaAuditType<TAudit>(type, custom ? AuditScheme.CustomDelete : AuditScheme.Delete), overrideLogin, overrideColor);
-    public void PostponeDeleteRange<T, TAudit>(IEnumerable<T> models, int? userId, Enum? type, string? overrideLogin = null, Enum? overrideColor = null, bool custom = false)
-        where T : class, IIntKeyedEntity, IAuditable<TAudit>
+    {
+        var storage = GetOrAddStorage<T, TAudit>();
+        var scheme = custom ? AuditScheme.CustomDelete : AuditScheme.Delete;
+        type = type ?? SchemeManager.GetFirstSchemaAuditType<TAudit>(type, scheme);
+        storage.PostponeDelete(model, type, additional, overrideLogin, overrideColor);
+    }
+    public void PostponeDeleteRange<T, TAudit>(IEnumerable<T> models, Enum? type = null, object? additional = null, string? overrideLogin = null, Enum? overrideColor = null, bool custom = false)
+        where T : class, IAuditable<TAudit>
         where TAudit : class, IIntKeyedEntity
-        => GetOrAddStorage<T, TAudit>().PostponeDeleteRange(models, userId, SchemeManager.GetFirstSchemaAuditType<TAudit>(type, custom ? AuditScheme.CustomDelete : AuditScheme.Delete), overrideLogin, overrideColor);
+    {
+        var storage = GetOrAddStorage<T, TAudit>();
+        var scheme = custom ? AuditScheme.CustomDelete : AuditScheme.Delete;
+        type = type ?? SchemeManager.GetFirstSchemaAuditType<TAudit>(type, scheme);
+        storage.PostponeDeleteRange(models, type, additional, overrideLogin, overrideColor);
+    }
     #endregion
 
     #region ExecutePostonedActions

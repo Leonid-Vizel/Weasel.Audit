@@ -2,8 +2,7 @@
 
 public interface IAuditAction : IIntKeyedEntity
 {
-    int EntityId { get; set; }
-    int? UserId { get; set; }
+    string EntityId { get; set; }
     Enum Type { get; set; }
     int? OldDataId { get; set; }
     int? NewDataId { get; set; }
