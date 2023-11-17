@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Weasel.Audit.Extensions;
 using Weasel.Audit.Interfaces;
 
 namespace Weasel.Audit.Services;
@@ -9,10 +10,10 @@ public interface IAuditStateManager
     IAuditSchemeManager SchemeManager { get; }
     IAuditStateStorage GlobalStateStorage { get; }
     void PushStates();
-    void CommitState<TAudit>(int entityId, TAudit data)
+    void CommitState<TAudit>(string entityId, TAudit data)
         where TAudit : class, IIntKeyedEntity;
     Task<TAudit> GetLastAction<T, TAudit>(DbContext context, T model)
-        where T : class, IIntKeyedEntity, IAuditable<TAudit>
+        where T : class, IAuditable<TAudit>
         where TAudit : class, IIntKeyedEntity;
 }
 public sealed class AuditStateManager : IAuditStateManager
@@ -28,35 +29,42 @@ public sealed class AuditStateManager : IAuditStateManager
     }
 
     public async Task<TAudit> GetLastAction<T, TAudit>(DbContext context, T model)
-        where T : class, IIntKeyedEntity, IAuditable<TAudit>
+        where T : class, IAuditable<TAudit>
         where TAudit : class, IIntKeyedEntity
     {
+        if (context == null)
+        {
+            throw new ArgumentNullException(nameof(context));
+        }
+        if (model == null)
+        {
+            throw new ArgumentNullException(nameof(model));
+        }
         TAudit? state = null;
-        if (PlannedStateStorage.TryGetValue<TAudit>(model.Id, out state))
+        string entityId = context.GetAuditEntityId(model);
+        if (PlannedStateStorage.TryGetValue<TAudit>(entityId, out state))
         {
             return state;
         }
-        if (GlobalStateStorage.TryGetValue<TAudit>(model.Id, out state))
+        if (GlobalStateStorage.TryGetValue<TAudit>(entityId, out state))
         {
             return state;
         }
-        state = await SearchInDataBase<TAudit>(context, model.Id);
+        state = await SearchInDataBase<TAudit>(context, entityId);
         if (state != null)
         {
-            GlobalStateStorage.PushState(model.Id, state);
+            GlobalStateStorage.PushState(entityId, state);
             return state;
         }
         state = await PostponedAuditManager.PlanAknowledgeAsync<T, TAudit>(context, model);
-        CommitState(model.Id, state);
+        CommitState(entityId, state);
         return state;
     }
-    public void CommitState<TAudit>(int entityId, TAudit data)
-        where TAudit : class, IIntKeyedEntity
+    public void CommitState<TAudit>(string entityId, TAudit data) where TAudit : class, IIntKeyedEntity
         => PlannedStateStorage.PushState(new AuditStateCacheKey(typeof(TAudit), entityId), data);
     public void PushStates()
         => GlobalStateStorage.JoinStorage(PlannedStateStorage);
-    private async Task<TAudit?> SearchInDataBase<TAudit>(DbContext context, int id)
-        where TAudit : class, IIntKeyedEntity
+    private async Task<TAudit?> SearchInDataBase<TAudit>(DbContext context, string id) where TAudit : class, IIntKeyedEntity
     {
         List<Enum> types = SchemeManager.GetTypeActions<TAudit>();
         if (types.Count == 0)

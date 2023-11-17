@@ -90,22 +90,16 @@ public sealed class InputGroupTagHelper : TagHelper
         };
         TagHelperContext context;
         var attributes = new List<TagHelperAttribute>();
-        if (For.ModelExplorer.ModelType == typeof(DateOnly) || For.ModelExplorer.ModelType == typeof(DateOnly?))
+        if (Type == null)
         {
-            Type = "date";
-            input.InputTypeName = "date";
-            DateOnly? dateOnlyValue = For.Model as DateOnly?;
-            if (dateOnlyValue == DateOnly.MinValue)
+            if (For.ModelExplorer.ModelType == typeof(DateOnly) || For.ModelExplorer.ModelType == typeof(DateOnly?))
             {
-                dateOnlyValue = null;
+                Type = "date";
             }
-            input.Value = dateOnlyValue?.ToString("yyyy-MM-dd");
-            attributes.Add(new TagHelperAttribute("value", input.Value));
-        }
-        if (For.ModelExplorer.ModelType == typeof(TimeOnly) || For.ModelExplorer.ModelType == typeof(TimeOnly?))
-        {
-            Type = "time";
-            input.InputTypeName = "time";
+            if (For.ModelExplorer.ModelType == typeof(TimeOnly) || For.ModelExplorer.ModelType == typeof(TimeOnly?))
+            {
+                Type = "time";
+            }
         }
         if (Type != null)
         {

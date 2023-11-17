@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore.Metadata;
 using System.Collections.Concurrent;
 using System.Reflection;
+using System.Text.Json;
 using Weasel.Audit.Attributes;
 using Weasel.Audit.Interfaces;
 
@@ -22,6 +23,8 @@ public static class DbContextExtensions
 {
     private static ConcurrentDictionary<IncludeAllCacheKey, List<string>> _actionIncludePaths
         = new ConcurrentDictionary<IncludeAllCacheKey, List<string>>();
+    private static ConcurrentDictionary<Type, IReadOnlyList<IProperty>> _typePrimaryKeys
+        = new ConcurrentDictionary<Type, IReadOnlyList<IProperty>>();
     private static readonly MethodInfo setMethod
         = typeof(DbContext).GetMethods().Single(p => p.Name == nameof(DbContext.Set) && p.ContainsGenericParameters && p.GetParameters().Length == 0);
 
@@ -100,36 +103,50 @@ public static class DbContextExtensions
         }
         return query;
     }
-    public static IQueryable<ILongKeyedEntity>? GetLongKeyedQueryable(this DbContext context, Type type)
-        => setMethod.MakeGenericMethod(type).Invoke(context, null) as IQueryable<ILongKeyedEntity>;
-    public static IQueryable<ILongKeyedEntity> IncludeAllLongKeyed(this DbContext context, Type type, int depth = 20)
+    public static string GetAuditEntityId(this DbContext context, object model)
     {
-        var query = context.GetLongKeyedQueryable(type);
-        if (query == null)
+        if (context == null)
         {
-            throw new Exception($"Cant get set of {type.FullName} from passed DbContext instance");
+            throw new ArgumentNullException(nameof(context));
         }
-        var paths = context.GetIncludePaths(type, depth);
-        foreach (var path in paths)
+        if (model == null)
         {
-            query = query.Include(path);
+            throw new ArgumentNullException(nameof(model));
         }
-        return query;
+        var entry = context.Entry(model);
+        var properties = context.FindEntityPrimaryKeys(model);
+        string?[] keys = new string[properties.Count];
+        for (int i = 0; i < properties.Count; i++)
+        {
+            keys[i] = entry.Property(properties[i]).CurrentValue?.ToString();
+        }
+        return JsonSerializer.Serialize(keys);
     }
-    public static IQueryable<IGuidKeyedEntity>? GetGuidKeyedQueryable(this DbContext context, Type type)
-        => setMethod.MakeGenericMethod(type).Invoke(context, null) as IQueryable<IGuidKeyedEntity>;
-    public static IQueryable<IGuidKeyedEntity> IncludeAllGuidKeyed(this DbContext context, Type type, int depth = 20)
+    public static IReadOnlyList<IProperty> FindEntityPrimaryKeys(this DbContext context, object model)
     {
-        var query = context.GetGuidKeyedQueryable(type);
-        if (query == null)
+        if (context == null)
         {
-            throw new Exception($"Cant get set of {type.FullName} from passed DbContext instance");
+            throw new ArgumentNullException(nameof(context));
         }
-        var paths = context.GetIncludePaths(type, depth);
-        foreach (var path in paths)
+        if (model == null)
         {
-            query = query.Include(path);
+            throw new ArgumentNullException(nameof(model));
         }
-        return query;
+        Type type = model.GetType();
+        if (_typePrimaryKeys.TryGetValue(type, out var list))
+        {
+            return list;
+        }
+        var entityType = context.Model.FindEntityType(type);
+        if (entityType == null)
+        {
+            throw new Exception($"EF EntityType for '{type.FullName}' not found!");
+        }
+        var primaryKey = entityType.FindPrimaryKey();
+        if (primaryKey == null)
+        {
+            throw new Exception($"EF primary key for '{type.FullName}' not found!");
+        }
+        return primaryKey.Properties;
     }
 }
