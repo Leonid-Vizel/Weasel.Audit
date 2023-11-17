@@ -6,12 +6,12 @@
     <Nullable>enable</Nullable>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <Title>$(AssemblyName)</Title>
-    <VersionPrefix>8.0.5</VersionPrefix>
+    <VersionPrefix>8.0.6</VersionPrefix>
     <Company>Vizel Leonid</Company>
     <Product>Weasel</Product>
     <Authors>Vizel Leonid</Authors>
     <Description>User actions audit library</Description>
-    <PackageReleaseNotes>Minor extensions for repositories</PackageReleaseNotes>
+    <PackageReleaseNotes>Some audit concept change</PackageReleaseNotes>
     <PackageIcon>weasel.png</PackageIcon>
     <RepositoryType>git</RepositoryType>
     <PackageTags>Weasel Audit</PackageTags>
@@ -33,7 +33,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.0" />
-    <PackageReference Include="Weasel.Tools.Extensions.Common" Version="8.0.0" />
+    <PackageReference Include="Weasel.Tools.Extensions.Common" Version="8.0.2" />
   </ItemGroup>
 
 </Project>

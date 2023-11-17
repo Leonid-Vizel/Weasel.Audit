@@ -117,7 +117,7 @@ public sealed class PostponedAuditStorage<T, TAudit> : IPosponedActionsStorage
         {
             throw new ArgumentNullException(nameof(model));
         }
-        TAudit audit = await model.AuditAsync(context, PostponedAuditManager);
+        TAudit audit = await model.AuditAsync(context);
         Enum actionType = SchemeManager.GetFirstSchemaAuditType<TAudit>(null, AuditScheme.Aknowledge);
         string entityId = context.GetAuditEntityId(model);
         _aknowledgeActions.Add(new PostponedInfoActionData<TAudit>(entityId, audit, actionType, null, "AKNOWLEDGE", null));
@@ -157,7 +157,7 @@ public sealed class PostponedAuditStorage<T, TAudit> : IPosponedActionsStorage
         foreach (var modelData in _createModels)
         {
             var model = modelData.Model;
-            TAudit action = await model.AuditAsync(context, PostponedAuditManager);
+            TAudit action = await model.AuditAsync(context);
             list.Add(action);
             string entityId = context.GetAuditEntityId(model);
             _createActions.Add(PostponedInfoActionData<TAudit>.Create(entityId, action, modelData));
@@ -174,7 +174,7 @@ public sealed class PostponedAuditStorage<T, TAudit> : IPosponedActionsStorage
         {
             var model = modelData.Model;
             TAudit oldAction = await StateManager.GetLastAction<T, TAudit>(context, model);
-            TAudit newAction = await model.AuditAsync(context, PostponedAuditManager);
+            TAudit newAction = await model.AuditAsync(context);
             list.Add(newAction);
             var entityId = context.GetAuditEntityId(model);
             StateManager.CommitState(entityId, newAction);
