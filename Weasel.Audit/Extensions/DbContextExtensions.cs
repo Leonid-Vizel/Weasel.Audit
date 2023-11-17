@@ -5,7 +5,7 @@ using System.Reflection;
 using Weasel.Audit.Attributes;
 using Weasel.Audit.Interfaces;
 
-namespace Weasel.Tools.Extensions.EFCore;
+namespace Weasel.Audit.Extensions;
 
 public struct IncludeAllCacheKey
 {
@@ -32,7 +32,7 @@ public static class DbContextExtensions
         var key = new IncludeAllCacheKey(type, depth);
         if (!_actionIncludePaths.TryGetValue(key, out var list))
         {
-            list = CalculateIncludePaths(context, type, depth).ToList();
+            list = context.CalculateIncludePaths(type, depth).ToList();
             _actionIncludePaths.TryAdd(key, list);
         }
         return list;
@@ -84,11 +84,43 @@ public static class DbContextExtensions
             }
         }
     }
-    public static IQueryable<IIntKeyedEntity>? GetQueryable(this DbContext context, Type type)
+    public static IQueryable<IIntKeyedEntity>? GetIntKeyedQueryable(this DbContext context, Type type)
         => setMethod.MakeGenericMethod(type).Invoke(context, null) as IQueryable<IIntKeyedEntity>;
-    public static IQueryable<IIntKeyedEntity> IncludeAll(this DbContext context, Type type, int depth = 20)
+    public static IQueryable<IIntKeyedEntity> IncludeAllIntKeyed(this DbContext context, Type type, int depth = 20)
     {
-        var query = context.GetQueryable(type);
+        var query = context.GetIntKeyedQueryable(type);
+        if (query == null)
+        {
+            throw new Exception($"Cant get set of {type.FullName} from passed DbContext instance");
+        }
+        var paths = context.GetIncludePaths(type, depth);
+        foreach (var path in paths)
+        {
+            query = query.Include(path);
+        }
+        return query;
+    }
+    public static IQueryable<ILongKeyedEntity>? GetLongKeyedQueryable(this DbContext context, Type type)
+        => setMethod.MakeGenericMethod(type).Invoke(context, null) as IQueryable<ILongKeyedEntity>;
+    public static IQueryable<ILongKeyedEntity> IncludeAllLongKeyed(this DbContext context, Type type, int depth = 20)
+    {
+        var query = context.GetLongKeyedQueryable(type);
+        if (query == null)
+        {
+            throw new Exception($"Cant get set of {type.FullName} from passed DbContext instance");
+        }
+        var paths = context.GetIncludePaths(type, depth);
+        foreach (var path in paths)
+        {
+            query = query.Include(path);
+        }
+        return query;
+    }
+    public static IQueryable<IGuidKeyedEntity>? GetGuidKeyedQueryable(this DbContext context, Type type)
+        => setMethod.MakeGenericMethod(type).Invoke(context, null) as IQueryable<IGuidKeyedEntity>;
+    public static IQueryable<IGuidKeyedEntity> IncludeAllGuidKeyed(this DbContext context, Type type, int depth = 20)
+    {
+        var query = context.GetGuidKeyedQueryable(type);
         if (query == null)
         {
             throw new Exception($"Cant get set of {type.FullName} from passed DbContext instance");

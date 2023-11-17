@@ -49,9 +49,9 @@ public sealed class AuditStateStorage : IAuditStateStorage
         where TAudit : class, IIntKeyedEntity
     {
         bool flag = CachedStates.TryGetValue(new AuditStateCacheKey(typeof(TAudit), entityId), out var outVal);
-        #pragma warning disable CS8600
+#pragma warning disable CS8600
         value = (TAudit)outVal;
-        #pragma warning restore CS8600
+#pragma warning restore CS8600
         return flag;
     }
 }

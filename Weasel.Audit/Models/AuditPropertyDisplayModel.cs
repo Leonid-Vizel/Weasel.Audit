@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace Weasel.Audit.Models;
+﻿namespace Weasel.Audit.Models;
 
 public sealed class AuditPropertyDisplayModel
 {
