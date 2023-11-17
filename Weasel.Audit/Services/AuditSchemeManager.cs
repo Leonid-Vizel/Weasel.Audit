@@ -19,6 +19,7 @@ public struct TypeAuditSchemeKey
 public interface IAuditSchemeManager
 {
     AuditActionDescriptionAttribute? GetAuditEnumDescription(Enum type);
+    Type? GetAuditEnumActionType(Enum type);
     Enum[] GetSchemaAuditTypes<TAudit>(AuditScheme scheme);
     Enum[] GetSchemaAuditTypes(AuditScheme scheme, Type actionType);
     Enum GetFirstSchemaAuditType<TAudit>(Enum? type, AuditScheme scheme);
@@ -53,10 +54,33 @@ public sealed class AuditSchemeManager : IAuditSchemeManager
 
     #region GetAuditEnumDescription
     public AuditActionDescriptionAttribute? GetAuditEnumDescription(Enum type)
-        => type.GetType()
-        .GetMember(type.ToString())
-        .FirstOrDefault()?
-        .GetCustomAttribute<AuditActionDescriptionAttribute>();
+    {
+        if (_enumDescriptions.TryGetValue(type, out var value))
+        {
+            return value;
+        }
+        value = type.GetType()
+            .GetMember(type.ToString())
+            .FirstOrDefault()?
+            .GetCustomAttribute<AuditActionDescriptionAttribute>();
+        if (value != null)
+        {
+            _enumDescriptions[type] = value;
+        }
+        return value;
+    }
+    #endregion
+
+    #region GetAuditEnumActionType
+    public Type? GetAuditEnumActionType(Enum type)
+    {
+        var description = GetAuditEnumDescription(type);
+        if (description == null)
+        {
+            return null;
+        }
+        return description.Type;
+    }
     #endregion
 
     #region GetSchemaAuditTypes
