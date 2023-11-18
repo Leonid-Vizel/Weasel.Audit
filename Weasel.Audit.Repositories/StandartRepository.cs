@@ -6,6 +6,8 @@ namespace Weasel.Audit.Repositories;
 
 public interface IStandartRepository<T> where T : class
 {
+    DbSet<T> Set { get; }
+    DbContext Context { get; }
     DbSet<T> GetSet();
     Task AddAsync(T model);
     Task AddRangeAsync(IEnumerable<T> models);

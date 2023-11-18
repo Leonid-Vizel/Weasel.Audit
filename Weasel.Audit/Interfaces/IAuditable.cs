@@ -2,7 +2,9 @@
 
 namespace Weasel.Audit.Interfaces;
 
-public interface IAuditable<TAudit> where TAudit: IIntKeyedEntity
+public interface IAuditable<TAuditResult, TAuditAction>
+    where TAuditResult : class, IAuditResult<TAuditAction>
+    where TAuditAction : class, IAuditAction
 {
-    Task<TAudit> AuditAsync(DbContext context);
+    Task<TAuditResult> AuditAsync(DbContext context);
 }

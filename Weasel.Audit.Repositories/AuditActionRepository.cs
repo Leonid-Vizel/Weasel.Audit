@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Weasel.Audit.Enums;
 using Weasel.Audit.Extensions;
 using Weasel.Audit.Interfaces;
 using Weasel.Audit.Models;
@@ -6,87 +7,108 @@ using Weasel.Audit.Services;
 
 namespace Weasel.Audit.Repositories;
 
-public interface IAuditActionRepository : IStandartRepository<IAuditAction>
+public interface IAuditActionRepository<TAuditAction> : IStandartRepository<TAuditAction>
+    where TAuditAction : class, IAuditAction
 {
+    IAuditSchemeManager SchemeManager { get; }
     IAuditPropertyManager PropertyManager { get; }
     Task<IAuditAction?> FindAsync(int id);
-    Task<List<IAuditAction>> GetListAsync(IEnumerable<Enum> types, string entity);
-    Task<List<AuditPropertyDisplayModel>> GetItemDataAsync<T>(int id);
-    Task<List<AuditPropertyDisplayModel>> GetItemDataAsync(Type actionType, int id);
-    Task<ActionIndexModel?> GetIndexAsync(int id);
+    Task<AuditIndexModel<TAuditAction>?> GetIndexAsync(int id);
+    Task<AuditHistoryModel<TAuditAction>?> GetHistoryAsync(string name, string entityId);
 }
 
-public sealed class AuditActionRepository : StandartRepository<IAuditAction>, IAuditActionRepository
+public sealed class AuditActionRepository<TAuditAction> : StandartRepository<TAuditAction>, IAuditActionRepository<TAuditAction>
+    where TAuditAction : class, IAuditAction
 {
     public IAuditSchemeManager SchemeManager { get; private set; }
     public IAuditPropertyManager PropertyManager { get; private set; }
-    public IServiceProvider ServiceProvider { get; private set; }
-    public AuditActionRepository(DbContext context, IAuditSchemeManager schemeManager, IAuditPropertyManager propertyManager, IServiceProvider serviceProvider) : base(context)
+    public AuditActionRepository(DbContext context, IAuditSchemeManager schemeManager, IAuditPropertyManager propertyManager) : base(context)
     {
         SchemeManager = schemeManager;
         PropertyManager = propertyManager;
-        ServiceProvider = serviceProvider;
     }
     public async Task<IAuditAction?> FindAsync(int id)
-        => await Context.Set<IAuditAction>().FindAsync(id);
-    public async Task<List<IAuditAction>> GetListAsync(IEnumerable<Enum> types, string entity)
+        => await Set.FindAsync(id);
+    public async Task<AuditIndexModel<TAuditAction>?> GetIndexAsync(int id)
     {
-        return await Where(x => types.Contains(x.Type) && x.EntityId == entity)
-                    .OrderBy(x => x.DateTime)
-                    .ToListAsync();
-    }
-    public async Task<List<AuditPropertyDisplayModel>> GetItemDataAsync<T>(int id)
-        => await GetItemDataAsync(typeof(T), id);
-    public async Task<List<AuditPropertyDisplayModel>> GetItemDataAsync(Type actionType, int id)
-    {
-        var item = await Context.IncludeAllIntKeyed(actionType).FirstOrDefaultAsync(x => x.Id == id);
-        if (item == null)
-        {
-            return new List<AuditPropertyDisplayModel>();
-        }
-        return PropertyManager.GetEntityDisplayData(actionType, item);
-    }
-    public async Task<ActionIndexModel?> GetIndexAsync(int id)
-    {
-        IAuditAction? dataAction = await FindAsync(id);
-        if (dataAction == null || (dataAction.OldDataId == null && dataAction.NewDataId == null))
+        var found = await Set.FindAsync(id);
+        if (found == null)
         {
             return null;
         }
-        Type? actionType = SchemeManager.GetAuditEnumActionType(dataAction.Type);
-        if (actionType == null)
+        var description = SchemeManager.GetAuditEnumDescription(found.Type);
+        if (description == null)
         {
             return null;
         }
-        var list = new List<List<AuditPropertyDisplayModel>>();
-        if (dataAction.OldDataId != null)
+        var rowsQuery = Context.IncludeAuditResult<TAuditAction>(description.Type);
+        if (rowsQuery == null)
         {
-            var oldItem = await GetItemDataAsync(actionType, dataAction.OldDataId.Value);
-            if (oldItem != null)
-            {
-                list.Add(oldItem);
-            }
+            return null;
         }
-        if (dataAction.NewDataId != null)
+        var row = await rowsQuery.FirstOrDefaultAsync(x => x.ActionId == id);
+        if (row == null)
         {
-            var newItem = await GetItemDataAsync(actionType, dataAction.NewDataId.Value);
-            if (newItem != null)
-            {
-                list.Add(newItem);
-            }
+            return null;
         }
-        if (list.Count == 2)
+        var data = PropertyManager.GetEntityDisplayData(description.Type, row);
+        switch (description.Scheme)
         {
-            int range = list.Min(x => x.Count);
-            for (int i = 0; i < range; i++)
-            {
-                list[1][i].Changed = !list[0][i].Equals(list[1][i]);
-            }
+            case AuditScheme.Create:
+            case AuditScheme.CustomCreate:
+            case AuditScheme.Delete:
+            case AuditScheme.CustomDelete:
+                return new AuditInfoModel<TAuditAction>()
+                {
+                    Items = data,
+                    Action = row.Action,
+                };
         }
-        return new ActionIndexModel()
+        var olderRow = await rowsQuery.FirstOrDefaultAsync(x => x.ActionId == id);
+        if (olderRow == null)
         {
-            Action = dataAction,
-            Items = list,
+            return new AuditInfoModel<TAuditAction>()
+            {
+                Items = data,
+                Action = row.Action,
+            };
+        }
+        var olderRowData = PropertyManager.GetEntityDisplayData(description.Type, olderRow);
+        return new AuditUpdateModel<TAuditAction>()
+        {
+            Old = olderRowData,
+            Update = data,
+            Action = row.Action,
         };
+    }
+    public async Task<AuditHistoryModel<TAuditAction>?> GetHistoryAsync(string name, string entityId)
+    {
+        var type = SchemeManager.GetTypeBySearchName(name);
+        if (type == null)
+        {
+            return null;
+        }
+        var model = new AuditHistoryModel<TAuditAction>()
+        {
+            Type = type,
+            EntityId = entityId,
+            TypeName = name,
+        };
+        var rowsQuery = Context.IncludeAuditResult<TAuditAction>(type);
+        if (rowsQuery == null)
+        {
+            return null;
+        }
+        var rows = await rowsQuery.OrderBy(x => x.Action.DateTime).ThenBy(x => x.Id).ToListAsync();
+        foreach (var row in rows)
+        {
+            model.Actions.Add(new AuditHistoryStateModel<TAuditAction>()
+            {
+                Action = row.Action,
+                Items = PropertyManager.GetEntityDisplayData(type, row)
+            });
+        }
+        model.Check();
+        return model;
     }
 }

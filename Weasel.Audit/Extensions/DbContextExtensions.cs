@@ -87,11 +87,13 @@ public static class DbContextExtensions
             }
         }
     }
-    public static IQueryable<IIntKeyedEntity>? GetIntKeyedQueryable(this DbContext context, Type type)
-        => setMethod.MakeGenericMethod(type).Invoke(context, null) as IQueryable<IIntKeyedEntity>;
-    public static IQueryable<IIntKeyedEntity> IncludeAllIntKeyed(this DbContext context, Type type, int depth = 20)
+    public static IQueryable<IAuditResult<TAuditAction>>? GetAuditResultQueryable<TAuditAction>(this DbContext context, Type type)
+        where TAuditAction : class, IAuditAction
+        => setMethod.MakeGenericMethod(type).Invoke(context, null) as IQueryable<IAuditResult<TAuditAction>>;
+    public static IQueryable<IAuditResult<TAuditAction>> IncludeAuditResult<TAuditAction>(this DbContext context, Type type, int depth = 20)
+        where TAuditAction : class, IAuditAction
     {
-        var query = context.GetIntKeyedQueryable(type);
+        var query = context.GetAuditResultQueryable<TAuditAction>(type);
         if (query == null)
         {
             throw new Exception($"Cant get set of {type.FullName} from passed DbContext instance");

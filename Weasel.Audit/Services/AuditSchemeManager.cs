@@ -18,8 +18,9 @@ public struct TypeAuditSchemeKey
 
 public interface IAuditSchemeManager
 {
-    AuditActionDescriptionAttribute? GetAuditEnumDescription(Enum type);
+    AuditDescAttribute? GetAuditEnumDescription(Enum type);
     Type? GetAuditEnumActionType(Enum type);
+    Type? GetTypeBySearchName(string name);
     Enum[] GetSchemaAuditTypes<TAudit>(AuditScheme scheme);
     Enum[] GetSchemaAuditTypes(AuditScheme scheme, Type actionType);
     Enum GetFirstSchemaAuditType<TAudit>(Enum? type, AuditScheme scheme);
@@ -31,13 +32,15 @@ public interface IAuditSchemeManager
 public sealed class AuditSchemeManager : IAuditSchemeManager
 {
     private readonly ConcurrentDictionary<Type, List<Enum>> _typeActions;
-    private readonly ConcurrentDictionary<Enum, AuditActionDescriptionAttribute> _enumDescriptions;
+    private readonly ConcurrentDictionary<Enum, AuditDescAttribute> _enumDescriptions;
+    private readonly ConcurrentDictionary<string, Type> _auditTypeSearchDictionary;
     private readonly ConcurrentDictionary<TypeAuditSchemeKey, Enum[]> _typeSchemaActions;
     public AuditSchemeManager(Type[] enumTypes)
     {
         _typeActions = new ConcurrentDictionary<Type, List<Enum>>();
         _typeSchemaActions = new ConcurrentDictionary<TypeAuditSchemeKey, Enum[]>();
-        _enumDescriptions = new ConcurrentDictionary<Enum, AuditActionDescriptionAttribute>();
+        _enumDescriptions = new ConcurrentDictionary<Enum, AuditDescAttribute>();
+        _auditTypeSearchDictionary = new ConcurrentDictionary<string, Type>();
         foreach (var enumType in enumTypes.Where(x => x.IsEnum))
         {
             foreach (Enum type in Enum.GetValues(enumType))
@@ -45,15 +48,27 @@ public sealed class AuditSchemeManager : IAuditSchemeManager
                 var decription = GetAuditEnumDescription(type);
                 if (decription == null)
                 {
-                    throw new ArgumentNullException($"Provide {nameof(AuditActionDescriptionAttribute)} attribute for {type}!");
+                    throw new ArgumentNullException($"Provide {nameof(AuditDescAttribute)} attribute for {type}!");
                 }
                 _enumDescriptions.TryAdd(type, decription);
+                _auditTypeSearchDictionary.TryAdd(decription.SearchTypeName, decription.Type);
             }
         }
     }
 
+    #region GetTypeBySearchName
+    public Type? GetTypeBySearchName(string name)
+    {
+        if (_auditTypeSearchDictionary.TryGetValue(name, out var type))
+        {
+            return type;
+        }
+        return null;
+    }
+    #endregion
+
     #region GetAuditEnumDescription
-    public AuditActionDescriptionAttribute? GetAuditEnumDescription(Enum type)
+    public AuditDescAttribute? GetAuditEnumDescription(Enum type)
     {
         if (_enumDescriptions.TryGetValue(type, out var value))
         {
@@ -62,7 +77,7 @@ public sealed class AuditSchemeManager : IAuditSchemeManager
         value = type.GetType()
             .GetMember(type.ToString())
             .FirstOrDefault()?
-            .GetCustomAttribute<AuditActionDescriptionAttribute>();
+            .GetCustomAttribute<AuditDescAttribute>();
         if (value != null)
         {
             _enumDescriptions[type] = value;
