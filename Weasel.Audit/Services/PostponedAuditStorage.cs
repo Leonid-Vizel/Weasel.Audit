@@ -4,51 +4,51 @@ using Weasel.Audit.Interfaces;
 
 namespace Weasel.Audit.Services;
 
-public struct PostponedModelData<T> where T : class
+public struct PostponedModelData<T, TEnum>
+    where TEnum : struct, Enum
+    where T : class
 {
     public T Model { get; private set; }
-    public Enum ActionType { get; private set; }
+    public TEnum ActionType { get; private set; }
     public object? Additional { get; private set; }
-    public string? OverrideLogin { get; private set; }
-    public Enum? OverrideColor { get; private set; }
-    public PostponedModelData(T model, Enum actionType, object? additional = null, string? overrideLogin = null, Enum? overrideColor = null)
+    public PostponedModelData(T model, TEnum actionType, object? additional = null)
     {
         Model = model;
         Additional = additional;
         ActionType = actionType;
-        OverrideLogin = overrideLogin;
-        OverrideColor = overrideColor;
     }
 }
 
-public interface IPosponedActionsStorage<TAuditAction>
-    where TAuditAction : class, IAuditAction
+public interface IPosponedActionsStorage<TAuditAction, TEnum>
+    where TAuditAction : class, IAuditAction<TEnum>
+	where TEnum : struct, Enum
 {
-    IPostponedAuditManager<TAuditAction> PostponedAuditManager { get; }
-    public IAuditActionFactory<TAuditAction> ActionFactory { get; }
+    IPostponedAuditManager<TAuditAction, TEnum> PostponedAuditManager { get; }
+    public IAuditActionFactory<TAuditAction, TEnum> ActionFactory { get; }
     Task PlanPerformActionsAsync(DbContext context);
 }
-public sealed class PostponedAuditStorage<T, TAuditResult, TAuditAction> : IPosponedActionsStorage<TAuditAction>
-    where T : class, IAuditable<TAuditResult, TAuditAction>
-    where TAuditResult : class, IAuditResult<TAuditAction>
-    where TAuditAction : class, IAuditAction
+public sealed class PostponedAuditStorage<T, TAuditResult, TAuditAction, TEnum> : IPosponedActionsStorage<TAuditAction, TEnum>
+    where T : class, IAuditable<TAuditResult, TAuditAction , TEnum>
+    where TAuditResult : class, IAuditResult<TAuditAction, TEnum>
+    where TAuditAction : class, IAuditAction<TEnum>
+	where TEnum : struct, Enum
 {
-    private List<PostponedModelData<T>> _postponedModels;
+    private List<PostponedModelData<T, TEnum>> _postponedModels;
 
-    public IPostponedAuditManager<TAuditAction> PostponedAuditManager { get; private set; }
-    public IAuditActionFactory<TAuditAction> ActionFactory => PostponedAuditManager.ActionFactory;
+    public IPostponedAuditManager<TAuditAction, TEnum> PostponedAuditManager { get; private set; }
+    public IAuditActionFactory<TAuditAction, TEnum> ActionFactory => PostponedAuditManager.ActionFactory;
 
-    public PostponedAuditStorage(IPostponedAuditManager<TAuditAction> postponedAuditManager)
+    public PostponedAuditStorage(IPostponedAuditManager<TAuditAction, TEnum> postponedAuditManager)
     {
         PostponedAuditManager = postponedAuditManager;
-        _postponedModels = new List<PostponedModelData<T>>();
+        _postponedModels = new List<PostponedModelData<T, TEnum>>();
     }
 
     #region Postpone
-    public void Postpone(T model, Enum type, object? additional = null, string? overrideLogin = null, Enum? overrideColor = null)
-        => _postponedModels.Add(new PostponedModelData<T>(model, type, additional, overrideLogin, overrideColor));
-    public void PostponeRange(IEnumerable<T> models, Enum type, object? additional = null, string? overrideLogin = null, Enum? overrideColor = null)
-        => _postponedModels.AddRange(models.Select(x => new PostponedModelData<T>(x, type, additional, overrideLogin, overrideColor)));
+    public void Postpone(T model, TEnum type, object? additional = null)
+        => _postponedModels.Add(new PostponedModelData<T, TEnum>(model, type, additional));
+    public void PostponeRange(IEnumerable<T> models, TEnum type, object? additional = null)
+        => _postponedModels.AddRange(models.Select(x => new PostponedModelData<T, TEnum>(x, type, additional)));
     #endregion
 
     #region PlanPerformActions
@@ -64,7 +64,7 @@ public sealed class PostponedAuditStorage<T, TAuditResult, TAuditAction> : IPosp
             var model = modelData.Model;
             TAuditResult action = await model.AuditAsync(context);
             string entityId = context.GetAuditEntityId(model);
-            action.Action = ActionFactory.CreateAuditAction(modelData.ActionType, entityId, modelData.Additional, modelData.OverrideLogin, modelData.OverrideColor);
+            action.Action = ActionFactory.CreateAuditAction(modelData.ActionType, entityId, modelData.Additional);
             list.Add(action);
         }
     }

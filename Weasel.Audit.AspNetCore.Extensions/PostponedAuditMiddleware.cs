@@ -4,8 +4,9 @@ using Weasel.Audit.Services;
 
 namespace Weasel.Audit.AspNetCore.Extensions;
 
-public sealed class PostponedAuditMiddleware<TAuditAction>
-    where TAuditAction : class, IAuditAction
+public sealed class PostponedAuditMiddleware<TAuditAction, TEnum>
+    where TAuditAction : class, IAuditAction<TEnum>
+	where TEnum : struct, Enum
 {
     private readonly RequestDelegate _next;
     public PostponedAuditMiddleware(RequestDelegate next)
@@ -13,7 +14,7 @@ public sealed class PostponedAuditMiddleware<TAuditAction>
         _next = next;
     }
 
-    public async Task InvokeAsync(HttpContext context, IPostponedAuditManager<TAuditAction> manager)
+    public async Task InvokeAsync(HttpContext context, IPostponedAuditManager<TAuditAction, TEnum> manager)
     {
         await _next(context);
         manager.ExecuteAndDispose();

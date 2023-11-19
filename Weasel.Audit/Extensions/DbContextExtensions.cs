@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
+using System;
 using System.Collections.Concurrent;
 using System.Reflection;
 using System.Text.Json;
@@ -87,13 +88,17 @@ public static class DbContextExtensions
             }
         }
     }
-    public static IQueryable<IAuditResult<TAuditAction>>? GetAuditResultQueryable<TAuditAction>(this DbContext context, Type type)
-        where TAuditAction : class, IAuditAction
-        => setMethod.MakeGenericMethod(type).Invoke(context, null) as IQueryable<IAuditResult<TAuditAction>>;
-    public static IQueryable<IAuditResult<TAuditAction>> IncludeAuditResult<TAuditAction>(this DbContext context, Type type, int depth = 20)
-        where TAuditAction : class, IAuditAction
-    {
-        var query = context.GetAuditResultQueryable<TAuditAction>(type);
+    public static IQueryable<IAuditResult<TAuditAction, TEnum>>? GetAuditResultQueryable<TAuditAction, TEnum>(this DbContext context, Type type)
+        where TAuditAction : class, IAuditAction<TEnum>
+		where TEnum : struct, Enum
+		=> setMethod
+        .MakeGenericMethod(type)
+        .Invoke(context, null) as IQueryable<IAuditResult<TAuditAction, TEnum>>;
+    public static IQueryable<IAuditResult<TAuditAction, TEnum>> IncludeAuditResult<TAuditAction, TEnum>(this DbContext context, Type type, int depth = 20)
+        where TAuditAction : class, IAuditAction<TEnum>
+		where TEnum : struct, Enum
+	{
+        var query = context.GetAuditResultQueryable<TAuditAction, TEnum>(type);
         if (query == null)
         {
             throw new Exception($"Cant get set of {type.FullName} from passed DbContext instance");

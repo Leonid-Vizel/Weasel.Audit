@@ -2,8 +2,9 @@
 
 namespace Weasel.Audit.Models;
 
-public sealed class AuditHistoryStateModel<TAuditAction> : AuditInfoModel<TAuditAction>
-    where TAuditAction : class, IAuditAction
+public sealed class AuditHistoryStateModel<TAuditAction, TEnum> : AuditInfoModel<TAuditAction, TEnum>
+    where TAuditAction : class, IAuditAction<TEnum>
+	where TEnum : struct, Enum
 {
     public bool Changed { get; set; }
 }

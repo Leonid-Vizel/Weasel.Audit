@@ -5,13 +5,14 @@ namespace Weasel.Audit.AspNetCore.Extensions;
 
 public static class AuditBuilderExtensions
 {
-    public static IApplicationBuilder UseAudit<TAuditAction>(this IApplicationBuilder builder)
-        where TAuditAction : class, IAuditAction
-    {
+    public static IApplicationBuilder UseAudit<TAuditAction, TEnum>(this IApplicationBuilder builder)
+        where TAuditAction : class, IAuditAction<TEnum>
+		where TEnum : struct, Enum
+	{
         if (builder == null)
         {
             throw new ArgumentNullException(nameof(builder));
         }
-        return builder.UseMiddleware<PostponedAuditMiddleware<TAuditAction>>();
+        return builder.UseMiddleware<PostponedAuditMiddleware<TAuditAction, TEnum>>();
     }
 }
