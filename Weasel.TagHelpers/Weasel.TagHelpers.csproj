@@ -6,12 +6,12 @@
     <Nullable>enable</Nullable>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <Title>$(AssemblyName)</Title>
-    <VersionPrefix>8.0.1</VersionPrefix>
+    <VersionPrefix>8.0.2</VersionPrefix>
     <Company>Vizel Leonid</Company>
     <Product>Weasel</Product>
     <Authors>Vizel Leonid</Authors>
     <Description>Common TagHelper classes for Weasel packages</Description>
-    <PackageReleaseNotes>Some minor chnages due to .NET 8</PackageReleaseNotes>
+    <PackageReleaseNotes>Derpendency update</PackageReleaseNotes>
     <PackageIcon>weasel.png</PackageIcon>
     <RepositoryType>git</RepositoryType>
     <PackageTags>Weasel Audit</PackageTags>
@@ -36,7 +36,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Weasel.Tools.Extensions.Common" Version="8.0.0" />
+    <PackageReference Include="Weasel.Tools.Extensions.Common" Version="8.0.2" />
   </ItemGroup>
 
 </Project>

@@ -4,7 +4,6 @@ public enum AuditScheme
 {
     Create,
     CustomCreate,
-    Aknowledge,
     Update,
     CustomUpdate,
     Delete,

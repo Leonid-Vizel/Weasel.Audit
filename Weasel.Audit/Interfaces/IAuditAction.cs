@@ -1,12 +1,9 @@
 ﻿namespace Weasel.Audit.Interfaces;
 
-public interface IAuditAction : IIntKeyedEntity
+public interface IAuditAction<TEnum> : IIntKeyedEntity
+    where TEnum : struct, Enum
 {
     string EntityId { get; set; }
-    Enum Type { get; set; }
-    int? OldDataId { get; set; }
-    int? NewDataId { get; set; }
-    string? OverrideLogin { get; set; }
-    Enum? OverrideColor { get; set; }
+	TEnum Type { get; set; }
     DateTime DateTime { get; set; }
 }

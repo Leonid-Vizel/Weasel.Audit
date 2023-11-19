@@ -1,15 +1,18 @@
 ﻿using Microsoft.AspNetCore.Builder;
+using Weasel.Audit.Interfaces;
 
 namespace Weasel.Audit.AspNetCore.Extensions;
 
 public static class AuditBuilderExtensions
 {
-    public static IApplicationBuilder UseResponseCompression(this IApplicationBuilder builder)
-    {
+    public static IApplicationBuilder UseAudit<TAuditAction, TEnum>(this IApplicationBuilder builder)
+        where TAuditAction : class, IAuditAction<TEnum>
+		where TEnum : struct, Enum
+	{
         if (builder == null)
         {
             throw new ArgumentNullException(nameof(builder));
         }
-        return builder.UseMiddleware<PostponedAuditMiddleware>();
+        return builder.UseMiddleware<PostponedAuditMiddleware<TAuditAction, TEnum>>();
     }
 }

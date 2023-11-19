@@ -7,29 +7,31 @@ using Weasel.Audit.Services;
 
 namespace Weasel.Audit.Repositories;
 
-public interface IAuditRepository<T, TAudit>
-    where T : class, IAuditable<TAudit>
-    where TAudit : class, IIntKeyedEntity
+public interface IAuditRepository<T, TAuditResult, TAuditAction, TEnum>
+    where TAuditResult : class, IAuditResult<TAuditAction, TEnum>
+    where T : class, IAuditable<TAuditResult, TAuditAction, TEnum>
+    where TAuditAction : class, IAuditAction<TEnum>
+    where TEnum : struct, Enum
 {
-    DbContext DataBase { get; }
-    IPostponedAuditManager AuditManager { get; }
+    DbContext Context { get; }
+    IPostponedAuditManager<TAuditAction, TEnum> AuditManager { get; }
     IAuditPropertyManager PropertyManager { get; }
     DbSet<T> Set { get; }
-    DbSet<TAudit> ActionSet { get; }
+    DbSet<TAuditResult> ActionSet { get; }
     ILogger Logger { get; }
 
-    Task AuditAddAsync(T model, object? additional = null, string? overrideLogin = null, Enum? overrideColor = null);
-    Task AuditAddCustomAsync(T model, Enum customType, object? additional = null, string? overrideLogin = null, Enum? overrideColor = null);
-    Task AuditAddRangeAsync(IReadOnlyList<T> models, object? additional = null, string? overrideLogin = null, Enum? overrideColor = null);
-    Task AuditAddCustomRangeAsync(IReadOnlyList<T> models, Enum customType, object? additional = null, string? overrideLogin = null, Enum? overrideColor = null);
-    Task AuditUpdateAsync(T oldModel, T updateModel, object? additional = null, string? overrideLogin = null, Enum? overrideColor = null);
-    Task AuditUpdateCustomAsync(T oldModel, T updateModel, Enum customType, object? additional = null, string? overrideLogin = null, Enum? overrideColor = null);
-    Task AuditUpdateRangeAsync(IReadOnlyList<Tuple<T, T>> models, object? additional = null, string? overrideLogin = null, Enum? overrideColor = null);
-    Task AuditUpdateCustomRangeAsync(IReadOnlyList<Tuple<T, T>> models, Enum customType, object? additional = null, string? overrideLogin = null, Enum? overrideColor = null);
-    Task AuditDeleteAsync(T model, object? additional = null, string? overrideLogin = null, Enum? overrideColor = null);
-    Task AuditDeleteCustomAsync(T model, Enum customType, object? additional = null, string? overrideLogin = null, Enum? overrideColor = null);
-    Task AuditDeleteRangeAsync(IReadOnlyList<T> models, object? additional = null, string? overrideLogin = null, Enum? overrideColor = null);
-    Task AuditDeleteCustomRangeAsync(IReadOnlyList<T> models, Enum customType, object? additional = null, string? overrideLogin = null, Enum? overrideColor = null);
+    Task AuditAddAsync(T model, object? additional = null);
+    Task AuditAddCustomAsync(T model, TEnum customType, object? additional = null);
+    Task AuditAddRangeAsync(IReadOnlyList<T> models, object? additional = null);
+    Task AuditAddCustomRangeAsync(IReadOnlyList<T> models, TEnum customType, object? additional = null);
+    Task AuditUpdateAsync(T oldModel, T updateModel, object? additional = null);
+    Task AuditUpdateCustomAsync(T oldModel, T updateModel, TEnum customType, object? additional = null);
+    Task AuditUpdateRangeAsync(IReadOnlyList<Tuple<T, T>> models, object? additional = null);
+    Task AuditUpdateCustomRangeAsync(IReadOnlyList<Tuple<T, T>> models, TEnum customType, object? additional = null);
+    Task AuditDeleteAsync(T model, object? additional = null);
+    Task AuditDeleteCustomAsync(T model, TEnum customType, object? additional = null);
+    Task AuditDeleteRangeAsync(IReadOnlyList<T> models, object? additional = null);
+    Task AuditDeleteCustomRangeAsync(IReadOnlyList<T> models, TEnum customType, object? additional = null);
 
     #region Events
     event BeforeInfoAuditDelegate<T>? BeforeAdd;
@@ -39,26 +41,26 @@ public interface IAuditRepository<T, TAudit>
 
     #region Defaults LINQ
     IOrderedQueryable<T> OrderBy<TKey>(Expression<Func<T, TKey>> filter);
-    IOrderedQueryable<TAudit> OrderByAction<TKey>(Expression<Func<TAudit, TKey>> filter);
+    IOrderedQueryable<TAuditResult> OrderByAction<TKey>(Expression<Func<TAuditResult, TKey>> filter);
     IOrderedQueryable<T> OrderByDescending<TKey>(Expression<Func<T, TKey>> filter);
-    IOrderedQueryable<TAudit> OrderByDescendingAction<TKey>(Expression<Func<TAudit, TKey>> filter);
+    IOrderedQueryable<TAuditResult> OrderByDescendingAction<TKey>(Expression<Func<TAuditResult, TKey>> filter);
     Task<TKey> MaxAsync<TKey>(Expression<Func<T, TKey>> filter, CancellationToken token = default);
     IQueryable<T> Where(Expression<Func<T, bool>> filter);
-    IQueryable<TAudit> WhereAction(Expression<Func<TAudit, bool>> filter);
+    IQueryable<TAuditResult> WhereAction(Expression<Func<TAuditResult, bool>> filter);
     IQueryable<TProperty> Select<TProperty>(Expression<Func<T, TProperty>> filter);
-    IQueryable<TProperty> SelectAction<TProperty>(Expression<Func<TAudit, TProperty>> filter);
+    IQueryable<TProperty> SelectAction<TProperty>(Expression<Func<TAuditResult, TProperty>> filter);
     IIncludableQueryable<T, TProperty> Include<TProperty>(Expression<Func<T, TProperty>> path);
-    IIncludableQueryable<TAudit, TProperty> IncludeAction<TProperty>(Expression<Func<TAudit, TProperty>> path);
-    Task AddActionAsync(TAudit value, CancellationToken token = default);
-    Task AddRangeActionAsync(IEnumerable<TAudit> values, CancellationToken token = default);
-    Task<TAudit?> FirstOrDefaultActionAsync(Expression<Func<TAudit, bool>> filter, CancellationToken token = default);
-    void RemoveAction(TAudit value);
+    IIncludableQueryable<TAuditResult, TProperty> IncludeAction<TProperty>(Expression<Func<TAuditResult, TProperty>> path);
+    Task AddActionAsync(TAuditResult value, CancellationToken token = default);
+    Task AddRangeActionAsync(IEnumerable<TAuditResult> values, CancellationToken token = default);
+    Task<TAuditResult?> FirstOrDefaultActionAsync(Expression<Func<TAuditResult, bool>> filter, CancellationToken token = default);
+    void RemoveAction(TAuditResult value);
     Task AddAsync(T value, CancellationToken token = default);
     Task AddRangeAsync(IEnumerable<T> values, CancellationToken token = default);
     void Remove(T value);
     void RemoveRange(IEnumerable<T> value);
     IQueryable<T> GetSet();
-    IQueryable<TAudit> GetActionSet();
+    IQueryable<TAuditResult> GetActionSet();
     Task<T?> FirstOrDefaultAsync(Expression<Func<T, bool>> filter, CancellationToken token = default);
     Task<int> CountAsync(CancellationToken token = default);
     Task<int> CountAsync(Expression<Func<T, bool>> filter, CancellationToken token = default);
@@ -69,59 +71,61 @@ public interface IAuditRepository<T, TAudit>
     void UpdateRange(IEnumerable<T> value);
     #endregion
 }
-public class AuditRepository<T, TAudit> : IAuditRepository<T, TAudit>
-    where T : class, IAuditable<TAudit>
-    where TAudit : class, IIntKeyedEntity
+public class AuditRepository<T, TAuditResult, TAuditAction, TEnum> : IAuditRepository<T, TAuditResult, TAuditAction, TEnum>
+    where T : class, IAuditable<TAuditResult, TAuditAction, TEnum>
+    where TAuditResult : class, IAuditResult<TAuditAction, TEnum>
+    where TAuditAction: class, IAuditAction<TEnum>
+	where TEnum : struct, Enum
 {
     public DbSet<T> Set { get; private set; }
-    public DbSet<TAudit> ActionSet { get; private set; }
+    public DbSet<TAuditResult> ActionSet { get; private set; }
     public ILogger Logger { get; private set; }
-    public DbContext DataBase { get; private set; }
-    public IPostponedAuditManager AuditManager { get; private set; }
+    public DbContext Context { get; private set; }
+    public IPostponedAuditManager<TAuditAction, TEnum> AuditManager { get; private set; }
     public IAuditPropertyManager PropertyManager { get; private set; }
 
-    public AuditRepository(DbContext context, ILoggerFactory loggerFactory, IPostponedAuditManager auditManager, IAuditPropertyManager propertyManager)
+    public AuditRepository(DbContext context, ILoggerFactory loggerFactory, IPostponedAuditManager<TAuditAction, TEnum> auditManager, IAuditPropertyManager propertyManager)
     {
         Logger = loggerFactory.CreateLogger(GetType().Name);
-        DataBase = context;
+        Context = context;
         AuditManager = auditManager;
         PropertyManager = propertyManager;
-        Set = DataBase.Set<T>();
-        ActionSet = DataBase.Set<TAudit>();
+        Set = Context.Set<T>();
+        ActionSet = Context.Set<TAuditResult>();
     }
 
-    public async Task AuditAddAsync(T model, object? additional = null, string? overrideLogin = null, Enum? overrideColor = null)
-        => await PerformAddAsync(model, null, additional, overrideLogin, overrideColor);
-    public async Task AuditAddCustomAsync(T model, Enum customType, object? additional = null, string? overrideLogin = null, Enum? overrideColor = null)
-        => await PerformAddAsync(model, customType, additional, overrideLogin, overrideColor);
-    public async Task AuditAddRangeAsync(IReadOnlyList<T> models, object? additional = null, string? overrideLogin = null, Enum? overrideColor = null)
-        => await PerformAddRangeAsync(models, null, additional, overrideLogin, overrideColor);
-    public async Task AuditAddCustomRangeAsync(IReadOnlyList<T> models, Enum customType, object? additional = null, string? overrideLogin = null, Enum? overrideColor = null)
-        => await PerformAddRangeAsync(models, customType, additional, overrideLogin, overrideColor);
-    public async Task AuditUpdateAsync(T oldModel, T updateModel, object? additional = null, string? overrideLogin = null, Enum? overrideColor = null)
-        => await PerformUpdateAsync(oldModel, updateModel, null, additional, overrideLogin, overrideColor);
-    public async Task AuditUpdateCustomAsync(T oldModel, T updateModel, Enum customType, object? additional = null, string? overrideLogin = null, Enum? overrideColor = null)
-        => await PerformUpdateAsync(oldModel, updateModel, customType, additional, overrideLogin, overrideColor);
-    public async Task AuditUpdateRangeAsync(IReadOnlyList<Tuple<T, T>> models, object? additional = null, string? overrideLogin = null, Enum? overrideColor = null)
-        => await PerformUpdateRangeAsync(models, null, additional, overrideLogin, overrideColor);
-    public async Task AuditUpdateCustomRangeAsync(IReadOnlyList<Tuple<T, T>> models, Enum customType, object? additional = null, string? overrideLogin = null, Enum? overrideColor = null)
-        => await PerformUpdateRangeAsync(models, customType, additional, overrideLogin, overrideColor);
-    public async Task AuditDeleteAsync(T model, object? additional = null, string? overrideLogin = null, Enum? overrideColor = null)
-        => await PerformDeleteAsync(model, null, additional, overrideLogin, overrideColor);
-    public async Task AuditDeleteCustomAsync(T model, Enum customType, object? additional = null, string? overrideLogin = null, Enum? overrideColor = null)
-        => await PerformDeleteAsync(model, customType, additional, overrideLogin, overrideColor);
-    public async Task AuditDeleteRangeAsync(IReadOnlyList<T> models, object? additional = null, string? overrideLogin = null, Enum? overrideColor = null)
-        => await PerformDeleteRangeAsync(models, null, additional, overrideLogin, overrideColor);
-    public async Task AuditDeleteCustomRangeAsync(IReadOnlyList<T> models, Enum customType, object? additional = null, string? overrideLogin = null, Enum? overrideColor = null)
-        => await PerformDeleteRangeAsync(models, customType, additional, overrideLogin, overrideColor);
+    public async Task AuditAddAsync(T model, object? additional = null)
+        => await PerformAddAsync(model, null, additional);
+    public async Task AuditAddCustomAsync(T model, TEnum customType, object? additional = null)
+        => await PerformAddAsync(model, customType, additional);
+    public async Task AuditAddRangeAsync(IReadOnlyList<T> models, object? additional = null)
+        => await PerformAddRangeAsync(models, null, additional);
+    public async Task AuditAddCustomRangeAsync(IReadOnlyList<T> models, TEnum customType, object? additional = null)
+        => await PerformAddRangeAsync(models, customType, additional);
+    public async Task AuditUpdateAsync(T oldModel, T updateModel, object? additional = null)
+        => await PerformUpdateAsync(oldModel, updateModel, null, additional);
+    public async Task AuditUpdateCustomAsync(T oldModel, T updateModel, TEnum customType, object? additional = null)
+        => await PerformUpdateAsync(oldModel, updateModel, customType, additional);
+    public async Task AuditUpdateRangeAsync(IReadOnlyList<Tuple<T, T>> models, object? additional = null)
+        => await PerformUpdateRangeAsync(models, null, additional);
+    public async Task AuditUpdateCustomRangeAsync(IReadOnlyList<Tuple<T, T>> models, TEnum customType, object? additional = null)
+        => await PerformUpdateRangeAsync(models, customType, additional);
+    public async Task AuditDeleteAsync(T model, object? additional = null)
+        => await PerformDeleteAsync(model, null, additional);
+    public async Task AuditDeleteCustomAsync(T model, TEnum customType, object? additional = null)
+        => await PerformDeleteAsync(model, customType, additional);
+    public async Task AuditDeleteRangeAsync(IReadOnlyList<T> models, object? additional = null)
+        => await PerformDeleteRangeAsync(models, null, additional);
+    public async Task AuditDeleteCustomRangeAsync(IReadOnlyList<T> models, TEnum customType, object? additional = null)
+        => await PerformDeleteRangeAsync(models, customType, additional);
 
-    private async Task PerformAddAsync(T model, Enum? auditType = null, object? additional = null, string? overrideLogin = null, Enum? overrideColor = null)
+    private async Task PerformAddAsync(T model, TEnum? auditType = null, object? additional = null)
     {
         await CallBeforeAdd(model);
         await AddAsync(model);
-        AuditManager.PostponeCreate<T, TAudit>(model, auditType, additional, overrideLogin, overrideColor, auditType != null);
+        AuditManager.PostponeUpdate<T, TAuditResult>(model, auditType, additional, auditType != null);
     }
-    private async Task PerformAddRangeAsync(IReadOnlyList<T> models, Enum? auditType = null, object? additional = null, string? overrideLogin = null, Enum? overrideColor = null)
+    private async Task PerformAddRangeAsync(IReadOnlyList<T> models, TEnum? auditType = null, object? additional = null)
     {
         if (models.Count == 0)
         {
@@ -132,20 +136,20 @@ public class AuditRepository<T, TAudit> : IAuditRepository<T, TAudit>
             await CallBeforeAdd(model);
         }
         await AddRangeAsync(models);
-        AuditManager.PostponeCreateRange<T, TAudit>(models, auditType, additional, overrideLogin, overrideColor, auditType != null);
+        AuditManager.PostponeCreateRange<T, TAuditResult>(models, auditType, additional, auditType != null);
     }
-    private async Task PerformUpdateAsync(T oldModel, T updateModel, Enum? auditType = null, object? additional = null, string? overrideLogin = null, Enum? overrideColor = null)
+    private async Task PerformUpdateAsync(T oldModel, T updateModel, TEnum? auditType = null, object? additional = null)
     {
         await CallBeforeUpdate(oldModel, updateModel);
-        PropertyManager.PerformUpdate(DataBase, oldModel, updateModel);
-        if (DataBase.Entry(oldModel).State != EntityState.Modified)
+        PropertyManager.PerformUpdate(Context, oldModel, updateModel);
+        if (Context.Entry(oldModel).State != EntityState.Modified)
         {
             return;
         }
         Update(oldModel);
-        AuditManager.PostponeUpdate<T, TAudit>(oldModel, auditType, additional, overrideLogin, overrideColor, auditType != null);
+        AuditManager.PostponeUpdate<T, TAuditResult>(oldModel, auditType, additional, auditType != null);
     }
-    private async Task PerformUpdateRangeAsync(IReadOnlyList<Tuple<T, T>> models, Enum? auditType = null, object? additional = null, string? overrideLogin = null, Enum? overrideColor = null)
+    private async Task PerformUpdateRangeAsync(IReadOnlyList<Tuple<T, T>> models, TEnum? auditType = null, object? additional = null)
     {
         if (models.Count == 0)
         {
@@ -155,11 +159,11 @@ public class AuditRepository<T, TAudit> : IAuditRepository<T, TAudit>
         {
             await CallBeforeUpdate(model.Item1, model.Item2);
         }
-        PropertyManager.PerformUpdateRange(DataBase, models);
+        PropertyManager.PerformUpdateRange(Context, models);
         List<T> updateList = new List<T>();
         foreach (Tuple<T, T> model in models)
         {
-            var entry = DataBase.Entry(model.Item1);
+            var entry = Context.Entry(model.Item1);
             entry.DetectChanges();
             if (entry.State == EntityState.Modified)
             {
@@ -171,15 +175,15 @@ public class AuditRepository<T, TAudit> : IAuditRepository<T, TAudit>
             return;
         }
         UpdateRange(updateList);
-        AuditManager.PostponeUpdateRange<T, TAudit>(updateList, auditType, additional, overrideLogin, overrideColor, auditType != null);
+        AuditManager.PostponeUpdateRange<T, TAuditResult>(updateList, auditType, additional, auditType != null);
     }
-    private async Task PerformDeleteAsync(T model, Enum? auditType = null, object? additional = null, string? overrideLogin = null, Enum? overrideColor = null)
+    private async Task PerformDeleteAsync(T model, TEnum? auditType = null, object? additional = null)
     {
         await CallBeforeDelete(model);
         Remove(model);
-        AuditManager.PostponeDelete<T, TAudit>(model, auditType, additional, overrideLogin, overrideColor, auditType != null);
+        AuditManager.PostponeDelete<T, TAuditResult>(model, auditType, additional, auditType != null);
     }
-    private async Task PerformDeleteRangeAsync(IReadOnlyList<T> models, Enum? auditType = null, object? additional = null, string? overrideLogin = null, Enum? overrideColor = null)
+    private async Task PerformDeleteRangeAsync(IReadOnlyList<T> models, TEnum? auditType = null, object? additional = null)
     {
         if (models.Count == 0)
         {
@@ -191,7 +195,7 @@ public class AuditRepository<T, TAudit> : IAuditRepository<T, TAudit>
             await CallBeforeDelete(model);
         }
         RemoveRange(models);
-        AuditManager.PostponeDeleteRange<T, TAudit>(models, auditType, additional, overrideLogin, overrideColor, auditType != null);
+        AuditManager.PostponeDeleteRange<T, TAuditResult>(models, auditType, additional, auditType != null);
     }
 
     #region Events
@@ -225,36 +229,36 @@ public class AuditRepository<T, TAudit> : IAuditRepository<T, TAudit>
     #region Defaults (LINQ)
     public IOrderedQueryable<T> OrderBy<TKey>(Expression<Func<T, TKey>> filter)
         => Set.OrderBy(filter);
-    public IOrderedQueryable<TAudit> OrderByAction<TKey>(Expression<Func<TAudit, TKey>> filter)
+    public IOrderedQueryable<TAuditResult> OrderByAction<TKey>(Expression<Func<TAuditResult, TKey>> filter)
         => ActionSet.OrderBy(filter);
     public IOrderedQueryable<T> OrderByDescending<TKey>(Expression<Func<T, TKey>> filter)
         => Set.OrderByDescending(filter);
-    public IOrderedQueryable<TAudit> OrderByDescendingAction<TKey>(Expression<Func<TAudit, TKey>> filter)
+    public IOrderedQueryable<TAuditResult> OrderByDescendingAction<TKey>(Expression<Func<TAuditResult, TKey>> filter)
         => ActionSet.OrderByDescending(filter);
     public IQueryable<T> Where(Expression<Func<T, bool>> filter)
         => Set.Where(filter);
-    public IQueryable<TAudit> WhereAction(Expression<Func<TAudit, bool>> filter)
+    public IQueryable<TAuditResult> WhereAction(Expression<Func<TAuditResult, bool>> filter)
         => ActionSet.Where(filter);
     public IQueryable<TProperty> Select<TProperty>(Expression<Func<T, TProperty>> filter)
         => Set.Select(filter);
-    public IQueryable<TProperty> SelectAction<TProperty>(Expression<Func<TAudit, TProperty>> filter)
+    public IQueryable<TProperty> SelectAction<TProperty>(Expression<Func<TAuditResult, TProperty>> filter)
         => ActionSet.Select(filter);
     public IIncludableQueryable<T, TProperty> Include<TProperty>(Expression<Func<T, TProperty>> path)
         => Set.Include(path);
-    public IIncludableQueryable<TAudit, TProperty> IncludeAction<TProperty>(Expression<Func<TAudit, TProperty>> path)
+    public IIncludableQueryable<TAuditResult, TProperty> IncludeAction<TProperty>(Expression<Func<TAuditResult, TProperty>> path)
         => ActionSet.Include(path);
-    public async Task AddActionAsync(TAudit value, CancellationToken token = default)
+    public async Task AddActionAsync(TAuditResult value, CancellationToken token = default)
         => await ActionSet.AddAsync(value, token);
-    public async Task AddRangeActionAsync(IEnumerable<TAudit> values, CancellationToken token = default)
+    public async Task AddRangeActionAsync(IEnumerable<TAuditResult> values, CancellationToken token = default)
         => await ActionSet.AddRangeAsync(values, token);
-    public async Task<TAudit?> FirstOrDefaultActionAsync(Expression<Func<TAudit, bool>> filter, CancellationToken token = default)
+    public async Task<TAuditResult?> FirstOrDefaultActionAsync(Expression<Func<TAuditResult, bool>> filter, CancellationToken token = default)
         => await ActionSet.FirstOrDefaultAsync(filter, token);
-    public void RemoveAction(TAudit value)
+    public void RemoveAction(TAuditResult value)
         => ActionSet.Remove(value);
 
     public IQueryable<T> GetSet()
         => Set;
-    public IQueryable<TAudit> GetActionSet()
+    public IQueryable<TAuditResult> GetActionSet()
         => ActionSet;
 
     public async Task AddAsync(T value, CancellationToken token = default)
@@ -284,7 +288,7 @@ public class AuditRepository<T, TAudit> : IAuditRepository<T, TAudit>
     public void UpdateRange(IEnumerable<T> value)
         => Set.UpdateRange(value);
     public async Task SaveAsync(CancellationToken token = default)
-        => await DataBase.SaveChangesAsync(token);
+        => await Context.SaveChangesAsync(token);
     #endregion
 }
 

@@ -1,5 +1,4 @@
 ﻿namespace Weasel.Audit.Attributes;
 
-public sealed class PreventCycleAttribute : Attribute
-{
-}
+[AttributeUsage(AttributeTargets.Property)]
+public sealed class PreventCycleAttribute : Attribute { }

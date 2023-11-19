@@ -5,5 +5,7 @@ public enum AuditPropertyDisplayMode
     Collection,
     Object,
     Field,
-    None
+    None,
+    SingularRelation,
+    PluralRelation,
 }
