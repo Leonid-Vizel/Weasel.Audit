@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Reflection.Emit;
 using Weasel.Audit.Enums;
 using Weasel.Audit.Interfaces;
 using Weasel.Audit.Models;
@@ -19,6 +20,7 @@ public interface IAuditPropertyManager
 }
 public sealed class AuditPropertyManager : IAuditPropertyManager
 {
+    private static readonly Type objectType = typeof(object);
     public IAuditPropertyStorage Storage { get; private set; }
     public AuditPropertyManager(IAuditPropertyStorage storage)
     {
@@ -30,14 +32,23 @@ public sealed class AuditPropertyManager : IAuditPropertyManager
         {
             throw new Exception($"DeclaringType of PropertyInfo is NULL. VB.NET modules are not supported by this library!");
         }
-        return info.GetValue;
+        DynamicMethod method = new DynamicMethod("PropertyGetter", objectType, [objectType], Assembly.GetExecutingAssembly().ManifestModule);
+        ILGenerator il = method.GetILGenerator(100);
 
-        //NEED TO IMPROVE PERFORMANCE
-        //var exInstance = Expression.Parameter(info.DeclaringType, "t");
-        //var exMemberAccess = Expression.MakeMemberAccess(exInstance, info);
-        //var exConvertToObject = Expression.Convert(exMemberAccess, typeof(object));
-        //var lambda = Expression.Lambda<Func<object, object>>(exConvertToObject, exInstance);
-        //return lambda.Compile();
+        // Load object onto the stack.
+        il.Emit(OpCodes.Ldarg_0);
+
+        // Call property getter
+        il.EmitCall(OpCodes.Callvirt, info.GetGetMethod(), null);
+
+        // If property returns value-type, value must be boxed
+        if (info.PropertyType.IsValueType)
+            il.Emit(OpCodes.Box, info.PropertyType);
+
+        // Exit method
+        il.Emit(OpCodes.Ret);
+
+        return (Func<object, object>)method.CreateDelegate(typeof(Func<object, object>));
     }
     public Action<object, object> CreatePropertySetter(PropertyInfo info)
     {
@@ -45,14 +56,20 @@ public sealed class AuditPropertyManager : IAuditPropertyManager
         {
             throw new Exception($"DeclaringType of PropertyInfo is NULL. VB.NET modules are not supported by this library!");
         }
-        return info.SetValue;
-        //var exInstance = Expression.Parameter(info.DeclaringType, "t");
-        //var exMemberAccess = Expression.MakeMemberAccess(exInstance, info);
-        //var exValue = Expression.Parameter(typeof(object), "p");
-        //var exConvertedValue = Expression.Convert(exValue, info.PropertyType);
-        //var exBody = Expression.Assign(exMemberAccess, exConvertedValue);
-        //var lambda = Expression.Lambda<Action<object, object>>(exBody, exInstance, exValue);
-        //return lambda.Compile();
+        DynamicMethod method = new DynamicMethod("PropertySetter", null, [typeof(object), typeof(object)], Assembly.GetExecutingAssembly().ManifestModule);
+        ILGenerator il = method.GetILGenerator();
+
+        il.Emit(OpCodes.Ldarg_0);
+        il.Emit(OpCodes.Castclass, info.DeclaringType);
+        il.Emit(OpCodes.Ldarg_1);
+        if (info.PropertyType.IsClass)
+            il.Emit(OpCodes.Castclass, info.PropertyType);
+        else
+            il.Emit(OpCodes.Unbox_Any, info.PropertyType);
+        il.EmitCall(OpCodes.Callvirt, info.GetSetMethod(), null);
+        il.Emit(OpCodes.Ret);
+
+        return (Action<object, object>)method.CreateDelegate(typeof(Action<object, object>));
     }
     public void PerformUpdate<T>(DbContext context, T old, T update)
     {
