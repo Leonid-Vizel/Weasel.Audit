@@ -76,12 +76,13 @@ public sealed class AuditPropertyStorage : IAuditPropertyStorage
     public List<AuditPropertyCache> GetAuditPropertyData(AuditPropertyManager manager, Type type)
     {
         var properties = type.GetProperties();
-        List<AuditPropertyCache> data = new List<AuditPropertyCache>();
+        var data = new List<AuditPropertyCache>();
         foreach (var info in properties)
         {
             var key = new AuditPropertyCacheKey(info);
             var createFunc = (AuditPropertyCacheKey key) => new AuditPropertyCache(manager, info);
             var cache = CachedProperties.GetOrAdd(key, createFunc);
+            data.Add(cache);
         }
         return data;
     }

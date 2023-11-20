@@ -1,6 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System.Collections;
-using System.Linq.Expressions;
 using System.Reflection;
 using System.Reflection.Emit;
 using Weasel.Audit.Enums;
@@ -35,17 +34,12 @@ public sealed class AuditPropertyManager : IAuditPropertyManager
         DynamicMethod method = new DynamicMethod("PropertyGetter", objectType, [objectType], Assembly.GetExecutingAssembly().ManifestModule);
         ILGenerator il = method.GetILGenerator(100);
 
-        // Load object onto the stack.
         il.Emit(OpCodes.Ldarg_0);
-
-        // Call property getter
         il.EmitCall(OpCodes.Callvirt, info.GetGetMethod(), null);
-
-        // If property returns value-type, value must be boxed
         if (info.PropertyType.IsValueType)
+        {
             il.Emit(OpCodes.Box, info.PropertyType);
-
-        // Exit method
+        }
         il.Emit(OpCodes.Ret);
 
         return (Func<object, object>)method.CreateDelegate(typeof(Func<object, object>));
@@ -62,10 +56,7 @@ public sealed class AuditPropertyManager : IAuditPropertyManager
         il.Emit(OpCodes.Ldarg_0);
         il.Emit(OpCodes.Castclass, info.DeclaringType);
         il.Emit(OpCodes.Ldarg_1);
-        if (info.PropertyType.IsClass)
-            il.Emit(OpCodes.Castclass, info.PropertyType);
-        else
-            il.Emit(OpCodes.Unbox_Any, info.PropertyType);
+        il.Emit(info.PropertyType.IsClass ? OpCodes.Castclass : OpCodes.Unbox_Any, info.PropertyType);
         il.EmitCall(OpCodes.Callvirt, info.GetSetMethod(), null);
         il.Emit(OpCodes.Ret);
 
@@ -94,7 +85,7 @@ public sealed class AuditPropertyManager : IAuditPropertyManager
         {
             object? oldValue = prop.Getter.Invoke(old);
             object? updateValue = prop.Getter.Invoke(update);
-            if (prop.UpdateStrategy.Compare(context, old, update, oldValue, updateValue))
+            if (!prop.UpdateStrategy.Compare(context, old, update, oldValue, updateValue))
             {
                 object? setValue = prop.UpdateStrategy.SetValue(context, old, update, oldValue, updateValue) ?? updateValue;
                 prop.Setter.Invoke(old, setValue);
@@ -133,7 +124,7 @@ public sealed class AuditPropertyManager : IAuditPropertyManager
             {
                 object? oldValue = prop.Getter.Invoke(old);
                 object? updateValue = prop.Getter.Invoke(update);
-                if (prop.UpdateStrategy.Compare(context, old, update, oldValue, updateValue))
+                if (!prop.UpdateStrategy.Compare(context, old, update, oldValue, updateValue))
                 {
                     object? setValue = prop.UpdateStrategy.SetValue(context, old, update, oldValue, updateValue) ?? updateValue;
                     prop.Setter.Invoke(old, setValue);
