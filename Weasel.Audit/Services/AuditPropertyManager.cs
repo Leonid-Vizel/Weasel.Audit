@@ -30,11 +30,14 @@ public sealed class AuditPropertyManager : IAuditPropertyManager
         {
             throw new Exception($"DeclaringType of PropertyInfo is NULL. VB.NET modules are not supported by this library!");
         }
-        var exInstance = Expression.Parameter(info.DeclaringType, "t");
-        var exMemberAccess = Expression.MakeMemberAccess(exInstance, info);
-        var exConvertToObject = Expression.Convert(exMemberAccess, typeof(object));
-        var lambda = Expression.Lambda<Func<object, object>>(exConvertToObject, exInstance);
-        return lambda.Compile();
+        return info.GetValue;
+
+        //NEED TO IMPROVE PERFORMANCE
+        //var exInstance = Expression.Parameter(info.DeclaringType, "t");
+        //var exMemberAccess = Expression.MakeMemberAccess(exInstance, info);
+        //var exConvertToObject = Expression.Convert(exMemberAccess, typeof(object));
+        //var lambda = Expression.Lambda<Func<object, object>>(exConvertToObject, exInstance);
+        //return lambda.Compile();
     }
     public Action<object, object> CreatePropertySetter(PropertyInfo info)
     {
@@ -42,13 +45,14 @@ public sealed class AuditPropertyManager : IAuditPropertyManager
         {
             throw new Exception($"DeclaringType of PropertyInfo is NULL. VB.NET modules are not supported by this library!");
         }
-        var exInstance = Expression.Parameter(info.DeclaringType, "t");
-        var exMemberAccess = Expression.MakeMemberAccess(exInstance, info);
-        var exValue = Expression.Parameter(typeof(object), "p");
-        var exConvertedValue = Expression.Convert(exValue, info.PropertyType);
-        var exBody = Expression.Assign(exMemberAccess, exConvertedValue);
-        var lambda = Expression.Lambda<Action<object, object>>(exBody, exInstance, exValue);
-        return lambda.Compile();
+        return info.SetValue;
+        //var exInstance = Expression.Parameter(info.DeclaringType, "t");
+        //var exMemberAccess = Expression.MakeMemberAccess(exInstance, info);
+        //var exValue = Expression.Parameter(typeof(object), "p");
+        //var exConvertedValue = Expression.Convert(exValue, info.PropertyType);
+        //var exBody = Expression.Assign(exMemberAccess, exConvertedValue);
+        //var lambda = Expression.Lambda<Action<object, object>>(exBody, exInstance, exValue);
+        //return lambda.Compile();
     }
     public void PerformUpdate<T>(DbContext context, T old, T update)
     {
