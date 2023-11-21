@@ -26,8 +26,8 @@ public struct AuditPropertyCache
 {
     public string Name { get; private set; } = null!;
     public PropertyInfo Info { get; private set; } = null!;
-    public Func<object, object> Getter { get; private set; } = null!;
-    public Action<object, object> Setter { get; private set; } = null!;
+    public Func<object, object>? Getter { get; private set; } = null!;
+    public Action<object, object>? Setter { get; private set; } = null!;
     public AuditUpdateStrategyAttribute UpdateStrategy { get; private set; }
     public AuditDisplayStrategyAttribute DisplayStrategy { get; private set; }
     public AuditPropertyCache(AuditPropertyManager manager, PropertyInfo info)
@@ -76,12 +76,13 @@ public sealed class AuditPropertyStorage : IAuditPropertyStorage
     public List<AuditPropertyCache> GetAuditPropertyData(AuditPropertyManager manager, Type type)
     {
         var properties = type.GetProperties();
-        List<AuditPropertyCache> data = new List<AuditPropertyCache>();
+        var data = new List<AuditPropertyCache>();
         foreach (var info in properties)
         {
             var key = new AuditPropertyCacheKey(info);
             var createFunc = (AuditPropertyCacheKey key) => new AuditPropertyCache(manager, info);
             var cache = CachedProperties.GetOrAdd(key, createFunc);
+            data.Add(cache);
         }
         return data;
     }

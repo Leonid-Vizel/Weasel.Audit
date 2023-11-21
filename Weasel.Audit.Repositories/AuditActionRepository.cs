@@ -1,5 +1,4 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using System;
 using Weasel.Audit.Enums;
 using Weasel.Audit.Extensions;
 using Weasel.Audit.Interfaces;
@@ -10,7 +9,7 @@ namespace Weasel.Audit.Repositories;
 
 public interface IAuditActionRepository<TAuditAction, TEnum> : IStandartRepository<TAuditAction>
     where TAuditAction : class, IAuditAction<TEnum>
-	where TEnum : struct, Enum
+    where TEnum : struct, Enum
 {
     IAuditSchemeManager<TEnum> SchemeManager { get; }
     IAuditPropertyManager PropertyManager { get; }
@@ -21,7 +20,7 @@ public interface IAuditActionRepository<TAuditAction, TEnum> : IStandartReposito
 
 public sealed class AuditActionRepository<TAuditAction, TEnum> : StandartRepository<TAuditAction>, IAuditActionRepository<TAuditAction, TEnum>
     where TAuditAction : class, IAuditAction<TEnum>
-	where TEnum : struct, Enum
+    where TEnum : struct, Enum
 {
     public IAuditSchemeManager<TEnum> SchemeManager { get; private set; }
     public IAuditPropertyManager PropertyManager { get; private set; }
@@ -67,7 +66,7 @@ public sealed class AuditActionRepository<TAuditAction, TEnum> : StandartReposit
                     Action = row.Action,
                 };
         }
-        var olderRow = await rowsQuery.FirstOrDefaultAsync(x => x.ActionId == id);
+        var olderRow = await rowsQuery.OrderByDescending(x => x.Id).FirstOrDefaultAsync(x => x.Action.EntityId == row.Action.EntityId && x.Id < row.Id);
         if (olderRow == null)
         {
             return new AuditInfoModel<TAuditAction, TEnum>()
