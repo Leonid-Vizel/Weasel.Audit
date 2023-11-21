@@ -11,8 +11,8 @@ namespace Weasel.Audit.Services;
 public interface IAuditPropertyManager
 {
     IAuditPropertyStorage Storage { get; }
-    Func<object, object> CreatePropertyGetter(PropertyInfo info);
-    Action<object, object> CreatePropertySetter(PropertyInfo info);
+    Func<object, object>? CreatePropertyGetter(PropertyInfo info);
+    Action<object, object>? CreatePropertySetter(PropertyInfo info);
     void PerformUpdate<T>(DbContext context, T old, T update);
     void PerformUpdateRange<T>(DbContext context, IReadOnlyList<Tuple<T, T>> updateData);
     List<AuditPropertyDisplayModel> GetEntityDisplayData(Type type, object? model);
@@ -25,17 +25,22 @@ public sealed class AuditPropertyManager : IAuditPropertyManager
     {
         Storage = storage;
     }
-    public Func<object, object> CreatePropertyGetter(PropertyInfo info)
+    public Func<object, object>? CreatePropertyGetter(PropertyInfo info)
     {
         if (info.DeclaringType == null)
         {
-            throw new Exception($"DeclaringType of PropertyInfo is NULL. VB.NET modules are not supported by this library!");
+            return null;
+        }
+        var getMethod = info.GetGetMethod();
+        if (getMethod == null)
+        {
+            return null;
         }
         DynamicMethod method = new DynamicMethod("PropertyGetter", objectType, [objectType], Assembly.GetExecutingAssembly().ManifestModule);
         ILGenerator il = method.GetILGenerator(100);
 
         il.Emit(OpCodes.Ldarg_0);
-        il.EmitCall(OpCodes.Callvirt, info.GetGetMethod(), null);
+        il.EmitCall(OpCodes.Callvirt, getMethod, null);
         if (info.PropertyType.IsValueType)
         {
             il.Emit(OpCodes.Box, info.PropertyType);
@@ -44,11 +49,16 @@ public sealed class AuditPropertyManager : IAuditPropertyManager
 
         return (Func<object, object>)method.CreateDelegate(typeof(Func<object, object>));
     }
-    public Action<object, object> CreatePropertySetter(PropertyInfo info)
+    public Action<object, object>? CreatePropertySetter(PropertyInfo info)
     {
         if (info.DeclaringType == null)
         {
-            throw new Exception($"DeclaringType of PropertyInfo is NULL. VB.NET modules are not supported by this library!");
+            return null;
+        }
+        var setMethod = info.GetSetMethod();
+        if (setMethod == null)
+        {
+            return null;
         }
         DynamicMethod method = new DynamicMethod("PropertySetter", null, [typeof(object), typeof(object)], Assembly.GetExecutingAssembly().ManifestModule);
         ILGenerator il = method.GetILGenerator();
@@ -57,7 +67,7 @@ public sealed class AuditPropertyManager : IAuditPropertyManager
         il.Emit(OpCodes.Castclass, info.DeclaringType);
         il.Emit(OpCodes.Ldarg_1);
         il.Emit(info.PropertyType.IsClass ? OpCodes.Castclass : OpCodes.Unbox_Any, info.PropertyType);
-        il.EmitCall(OpCodes.Callvirt, info.GetSetMethod(), null);
+        il.EmitCall(OpCodes.Callvirt, setMethod, null);
         il.Emit(OpCodes.Ret);
 
         return (Action<object, object>)method.CreateDelegate(typeof(Action<object, object>));
@@ -83,6 +93,10 @@ public sealed class AuditPropertyManager : IAuditPropertyManager
         var props = Storage.GetAuditPropertyData(this, typeof(T));
         foreach (var prop in props)
         {
+            if (prop.Getter == null || prop.Setter == null)
+            {
+                continue;
+            }
             object? oldValue = prop.Getter.Invoke(old);
             object? updateValue = prop.Getter.Invoke(update);
             if (!prop.UpdateStrategy.Compare(context, old, update, oldValue, updateValue))
@@ -122,6 +136,10 @@ public sealed class AuditPropertyManager : IAuditPropertyManager
             }
             foreach (var prop in props)
             {
+                if (prop.Getter == null || prop.Setter == null)
+                {
+                    continue;
+                }
                 object? oldValue = prop.Getter.Invoke(old);
                 object? updateValue = prop.Getter.Invoke(update);
                 if (!prop.UpdateStrategy.Compare(context, old, update, oldValue, updateValue))
@@ -173,6 +191,10 @@ public sealed class AuditPropertyManager : IAuditPropertyManager
         List<AuditPropertyDisplayModel> items = new List<AuditPropertyDisplayModel>();
         foreach (var prop in props)
         {
+            if (prop.Getter == null)
+            {
+                continue;
+            }
             object? value = model == null ? null : prop.Getter.Invoke(model);
             object? formattedValue = prop.DisplayStrategy.FormatValue(prop.Info, model, value);
             if (prop.GetDisplayMode(model, formattedValue) == AuditPropertyDisplayMode.None)
