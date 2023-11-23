@@ -1,6 +1,6 @@
 ﻿namespace Weasel.Audit.Models;
 
-public sealed class AuditPropertyDisplayModel
+public class AuditPropertyDisplayModel
 {
     public AuditPropertyDisplayModel() : base() { }
     public AuditPropertyDisplayModel(string name) : this()

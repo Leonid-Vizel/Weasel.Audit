@@ -8,8 +8,8 @@ namespace Weasel.Audit.Attributes.Display;
 [AttributeUsage(AttributeTargets.Property | AttributeTargets.Class)]
 public class StandartAuditDisplayAttribute : AuditDisplayStrategyAttribute
 {
-    private static readonly Type[] _fieldTypes = new Type[]
-    {
+    private static readonly Type[] _fieldTypes =
+    [
         typeof(int),
         typeof(int?),
         typeof(long),
@@ -41,7 +41,7 @@ public class StandartAuditDisplayAttribute : AuditDisplayStrategyAttribute
         typeof(DateOnly?),
         typeof(TimeOnly),
         typeof(TimeOnly?),
-    };
+    ];
     public string? NullValue { get; private set; }
     public string? TrueValue { get; private set; }
     public string? FalseValue { get; private set; }
@@ -98,8 +98,8 @@ public class StandartAuditDisplayAttribute : AuditDisplayStrategyAttribute
     }
     public override AuditPropertyDisplayMode GetDisplayMode(PropertyInfo info, object? declare, object? value)
     {
-        Type type = info.PropertyType;
-        if (_fieldTypes.Contains(type))
+        Type type = value?.GetType() ?? info.PropertyType;
+        if (_fieldTypes.Contains(type) || type.IsEnum)
         {
             return AuditPropertyDisplayMode.Field;
         }

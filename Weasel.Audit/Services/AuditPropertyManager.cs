@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Reflection;
 using System.Reflection.Emit;
+using Weasel.Audit.Attributes.Display;
 using Weasel.Audit.Enums;
 using Weasel.Audit.Interfaces;
 using Weasel.Audit.Models;
@@ -150,9 +151,8 @@ public sealed class AuditPropertyManager : IAuditPropertyManager
             }
         }
     }
-    private object? GetPropertyDisplayModels(AuditPropertyCache prop, object? declare, object? value)
+    private object? GetPropertyDisplayModels(AuditPropertyCache prop, object? declare, object? value, AuditPropertyDisplayMode mode)
     {
-        var mode = prop.GetDisplayMode(declare, value);
         switch (mode)
         {
             case AuditPropertyDisplayMode.Collection:
@@ -181,6 +181,12 @@ public sealed class AuditPropertyManager : IAuditPropertyManager
                 return GetEntityDisplayData(prop.Info.PropertyType, value);
             case AuditPropertyDisplayMode.Field:
                 return value;
+            case AuditPropertyDisplayMode.SingularRelation:
+                if (prop.DisplayStrategy is not SingularRelationDisplayAttribute relation)
+                {
+                    return new List<AuditPropertyDisplayModel>();
+                }
+                return new AuditRelationDisplayModel(prop.Name, relation.RelatingType);
             default:
                 return new List<AuditPropertyDisplayModel>();
         }
@@ -197,13 +203,14 @@ public sealed class AuditPropertyManager : IAuditPropertyManager
             }
             object? value = model == null ? null : prop.Getter.Invoke(model);
             object? formattedValue = prop.DisplayStrategy.FormatValue(prop.Info, model, value);
-            if (prop.GetDisplayMode(model, formattedValue) == AuditPropertyDisplayMode.None)
+            var mode = prop.GetDisplayMode(model, formattedValue);
+            if (mode == AuditPropertyDisplayMode.None)
             {
                 continue;
             }
             items.Add(new AuditPropertyDisplayModel()
             {
-                Value = GetPropertyDisplayModels(prop, model, formattedValue),
+                Value = GetPropertyDisplayModels(prop, model, formattedValue, mode),
                 Name = prop.Name,
             });
         }

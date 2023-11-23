@@ -7,5 +7,4 @@ public enum AuditPropertyDisplayMode
     Field,
     None,
     SingularRelation,
-    PluralRelation,
 }

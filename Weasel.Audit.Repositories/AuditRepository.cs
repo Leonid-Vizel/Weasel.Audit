@@ -123,7 +123,7 @@ public class AuditRepository<T, TAuditResult, TAuditAction, TEnum> : IAuditRepos
     {
         await CallBeforeAdd(model);
         await AddAsync(model);
-        AuditManager.PostponeUpdate<T, TAuditResult>(model, auditType, additional, auditType != null);
+        AuditManager.PostponeCreate<T, TAuditResult>(model, auditType, additional, auditType != null);
     }
     private async Task PerformAddRangeAsync(IReadOnlyList<T> models, TEnum? auditType = null, object? additional = null)
     {
