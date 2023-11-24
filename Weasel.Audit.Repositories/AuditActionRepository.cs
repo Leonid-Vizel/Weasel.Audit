@@ -101,7 +101,7 @@ public sealed class AuditActionRepository<TAuditAction, TEnum> : StandartReposit
         {
             return null;
         }
-        var rows = await rowsQuery.OrderBy(x => x.Action.DateTime).ThenBy(x => x.Id).ToListAsync();
+        var rows = await rowsQuery.Where(x=>x.Action.EntityId == entityId).OrderBy(x => x.Action.DateTime).ThenBy(x => x.Id).ToListAsync();
         foreach (var row in rows)
         {
             model.Actions.Add(new AuditHistoryStateModel<TAuditAction, TEnum>()

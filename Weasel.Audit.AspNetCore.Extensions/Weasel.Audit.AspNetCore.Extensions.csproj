@@ -6,11 +6,11 @@
     <Nullable>enable</Nullable>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <Title>$(AssemblyName)</Title>
-    <VersionPrefix>8.0.12</VersionPrefix>
+    <VersionPrefix>8.0.13</VersionPrefix>
     <Company>Vizel Leonid</Company>
     <Product>Weasel</Product>
     <Authors>Vizel Leonid</Authors>
-    <Description>Weasel.Audit extensions and tag helpers for ASP.NET Core</Description>
+    <Description>Weasel.Audit extensions for ASP.NET Core</Description>
     <PackageReleaseNotes>Dependency update</PackageReleaseNotes>
     <PackageIcon>weasel.png</PackageIcon>
     <RepositoryType>git</RepositoryType>
@@ -36,7 +36,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Weasel.Audit" Version="8.0.12" />
+    <PackageReference Include="Weasel.Audit" Version="8.0.13" />
   </ItemGroup>
 
 </Project>
