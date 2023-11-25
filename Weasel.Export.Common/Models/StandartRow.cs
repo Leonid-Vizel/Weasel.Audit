@@ -6,11 +6,11 @@ namespace Weasel.Export.Common.Models;
 public struct StandartRow
 {
     public IReadOnlyCollection<object?> Cells { get; private set; } = null!;
-    public XLColor? Color { get; private set; }
-    public XLHyperlink? HyperLink { get; private set; }
-    public StandartRow()
+    public XLColor? Color { get; private set; } = null;
+	public XLHyperlink? HyperLink { get; private set; } = null;
+	public StandartRow()
     {
-        Cells = ImmutableArray<object?>.Empty;
+		Cells = ImmutableArray<object?>.Empty;
     }
     public StandartRow(IReadOnlyCollection<object?> cells)
     {
