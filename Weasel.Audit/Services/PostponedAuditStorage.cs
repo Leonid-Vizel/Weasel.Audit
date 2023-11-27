@@ -19,26 +19,28 @@ public struct PostponedModelData<T, TEnum>
     }
 }
 
-public interface IPosponedActionsStorage<TAuditAction, TEnum>
+public interface IPosponedActionsStorage<TAuditAction, TEnum, TColor>
     where TAuditAction : class, IAuditAction<TEnum>
 	where TEnum : struct, Enum
+    where TColor : struct, Enum
 {
-    IPostponedAuditManager<TAuditAction, TEnum> PostponedAuditManager { get; }
+    IPostponedAuditManager<TAuditAction, TEnum, TColor> PostponedAuditManager { get; }
     public IAuditActionFactory<TAuditAction, TEnum> ActionFactory { get; }
     Task PlanPerformActionsAsync(DbContext context);
 }
-public sealed class PostponedAuditStorage<T, TAuditResult, TAuditAction, TEnum> : IPosponedActionsStorage<TAuditAction, TEnum>
+public sealed class PostponedAuditStorage<T, TAuditResult, TAuditAction, TEnum, TColor> : IPosponedActionsStorage<TAuditAction, TEnum, TColor>
     where T : class, IAuditable<TAuditResult, TAuditAction , TEnum>
     where TAuditResult : class, IAuditResult<TAuditAction, TEnum>
     where TAuditAction : class, IAuditAction<TEnum>
 	where TEnum : struct, Enum
+    where TColor : struct, Enum
 {
     private List<PostponedModelData<T, TEnum>> _postponedModels;
 
-    public IPostponedAuditManager<TAuditAction, TEnum> PostponedAuditManager { get; private set; }
+    public IPostponedAuditManager<TAuditAction, TEnum, TColor> PostponedAuditManager { get; private set; }
     public IAuditActionFactory<TAuditAction, TEnum> ActionFactory => PostponedAuditManager.ActionFactory;
 
-    public PostponedAuditStorage(IPostponedAuditManager<TAuditAction, TEnum> postponedAuditManager)
+    public PostponedAuditStorage(IPostponedAuditManager<TAuditAction, TEnum, TColor> postponedAuditManager)
     {
         PostponedAuditManager = postponedAuditManager;
         _postponedModels = new List<PostponedModelData<T, TEnum>>();
