@@ -186,7 +186,7 @@ public sealed class AuditPropertyManager : IAuditPropertyManager
                 {
                     return new List<AuditPropertyDisplayModel>();
                 }
-                return new AuditRelationDisplayModel(prop.Name, relation.RelatingType);
+                return new AuditRelationDisplayModel(prop.Name, relation.RelatingType, value);
             default:
                 return new List<AuditPropertyDisplayModel>();
         }
