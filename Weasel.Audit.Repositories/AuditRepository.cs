@@ -1,20 +1,22 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query;
 using Microsoft.Extensions.Logging;
+using System.Drawing;
 using System.Linq.Expressions;
 using Weasel.Audit.Interfaces;
 using Weasel.Audit.Services;
 
 namespace Weasel.Audit.Repositories;
 
-public interface IAuditRepository<T, TAuditResult, TAuditAction, TEnum>
+public interface IAuditRepository<T, TAuditResult, TAuditAction, TEnum, TColor>
     where TAuditResult : class, IAuditResult<TAuditAction, TEnum>
     where T : class, IAuditable<TAuditResult, TAuditAction, TEnum>
     where TAuditAction : class, IAuditAction<TEnum>
     where TEnum : struct, Enum
+    where TColor : struct, Enum
 {
     DbContext Context { get; }
-    IPostponedAuditManager<TAuditAction, TEnum> AuditManager { get; }
+    IPostponedAuditManager<TAuditAction, TEnum, TColor> AuditManager { get; }
     IAuditPropertyManager PropertyManager { get; }
     DbSet<T> Set { get; }
     DbSet<TAuditResult> ActionSet { get; }
@@ -71,20 +73,21 @@ public interface IAuditRepository<T, TAuditResult, TAuditAction, TEnum>
     void UpdateRange(IEnumerable<T> value);
     #endregion
 }
-public class AuditRepository<T, TAuditResult, TAuditAction, TEnum> : IAuditRepository<T, TAuditResult, TAuditAction, TEnum>
+public class AuditRepository<T, TAuditResult, TAuditAction, TEnum, TColor> : IAuditRepository<T, TAuditResult, TAuditAction, TEnum, TColor>
     where T : class, IAuditable<TAuditResult, TAuditAction, TEnum>
     where TAuditResult : class, IAuditResult<TAuditAction, TEnum>
     where TAuditAction: class, IAuditAction<TEnum>
 	where TEnum : struct, Enum
+    where TColor : struct, Enum
 {
     public DbSet<T> Set { get; private set; }
     public DbSet<TAuditResult> ActionSet { get; private set; }
     public ILogger Logger { get; private set; }
     public DbContext Context { get; private set; }
-    public IPostponedAuditManager<TAuditAction, TEnum> AuditManager { get; private set; }
+    public IPostponedAuditManager<TAuditAction, TEnum, TColor> AuditManager { get; private set; }
     public IAuditPropertyManager PropertyManager { get; private set; }
 
-    public AuditRepository(DbContext context, ILoggerFactory loggerFactory, IPostponedAuditManager<TAuditAction, TEnum> auditManager, IAuditPropertyManager propertyManager)
+    public AuditRepository(DbContext context, ILoggerFactory loggerFactory, IPostponedAuditManager<TAuditAction, TEnum, TColor> auditManager, IAuditPropertyManager propertyManager)
     {
         Logger = loggerFactory.CreateLogger(GetType().Name);
         Context = context;

@@ -1,4 +1,5 @@
 ﻿using Weasel.Audit.Enums;
+using Weasel.Tools.Extensions.Common;
 
 namespace Weasel.Audit.Attributes.Enums;
 
@@ -11,15 +12,15 @@ public abstract class AuditDescAttribute : Attribute
     public Type Type { get; private set; }
     public string SearchTypeName { get; private set; }
     public string SearchUrlTypeName { get; private set; }
-    public AuditDescAttribute(Enum journal, string name, Enum color, AuditScheme scheme, Type type, string? searchName = null)
+    public AuditDescAttribute(Enum journal, string name, Enum color, AuditScheme scheme, Type type)
     {
         Journal = journal;
         Name = name;
         Color = color;
         Scheme = scheme;
         Type = type;
-        SearchTypeName = searchName?.ToLower() ?? Type.Name.ToLower();
-        SearchUrlTypeName = searchName ?? Type.Name;
+        SearchTypeName = type.GetDisplayName() ?? Type.Name.ToLower();
+        SearchUrlTypeName = Type.Name;
     }
 }
 

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Reflection;
 using Weasel.Audit.Attributes.Enums;
 using Weasel.Audit.Enums;
@@ -17,8 +16,9 @@ public struct TypeAuditSchemeKey
 	}
 }
 
-public interface IAuditSchemeManager<TEnum>
+public interface IAuditSchemeManager<TEnum, TColor>
 	where TEnum : struct, Enum
+    where TColor : struct, Enum
 {
 	AuditDescAttribute? GetAuditEnumDescription(TEnum type);
 	Type? GetAuditEnumActionType(TEnum type);
@@ -31,16 +31,19 @@ public interface IAuditSchemeManager<TEnum>
 	List<TEnum> GetTypeActions(Type actionType);
 }
 
-public sealed class AuditSchemeManager<TEnum> : IAuditSchemeManager<TEnum>
+public sealed class AuditSchemeManager<TEnum, TColor> : IAuditSchemeManager<TEnum, TColor>
 	where TEnum : struct, Enum
+    where TColor : struct, Enum
 {
 	private readonly ConcurrentDictionary<Type, List<TEnum>> _typeActions;
 	private readonly ConcurrentDictionary<TEnum, AuditDescAttribute> _enumDescriptions;
-	private readonly ConcurrentDictionary<string, Type> _auditTypeSearchDictionary;
+    private readonly ConcurrentDictionary<Enum, AuditColorAttribute> _colorDescriptions;
+    private readonly ConcurrentDictionary<string, Type> _auditTypeSearchDictionary;
 	private readonly ConcurrentDictionary<TypeAuditSchemeKey, TEnum[]> _typeSchemaActions;
 	public AuditSchemeManager()
 	{
-		_typeActions = new ConcurrentDictionary<Type, List<TEnum>>();
+		_colorDescriptions = new ConcurrentDictionary<Enum, AuditColorAttribute>();
+        _typeActions = new ConcurrentDictionary<Type, List<TEnum>>();
 		_typeSchemaActions = new ConcurrentDictionary<TypeAuditSchemeKey, TEnum[]>();
 		_enumDescriptions = new ConcurrentDictionary<TEnum, AuditDescAttribute>();
 		_auditTypeSearchDictionary = new ConcurrentDictionary<string, Type>();

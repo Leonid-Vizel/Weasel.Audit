@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using System.Drawing;
 using Weasel.Audit.Enums;
 using Weasel.Audit.Extensions;
 using Weasel.Audit.Interfaces;
@@ -7,24 +8,26 @@ using Weasel.Audit.Services;
 
 namespace Weasel.Audit.Repositories;
 
-public interface IAuditActionRepository<TAuditAction, TEnum> : IStandartRepository<TAuditAction>
+public interface IAuditActionRepository<TAuditAction, TEnum, TColor> : IStandartRepository<TAuditAction>
     where TAuditAction : class, IAuditAction<TEnum>
     where TEnum : struct, Enum
+    where TColor : struct, Enum
 {
-    IAuditSchemeManager<TEnum> SchemeManager { get; }
+    IAuditSchemeManager<TEnum, TColor> SchemeManager { get; }
     IAuditPropertyManager PropertyManager { get; }
     Task<IAuditAction<TEnum>?> FindAsync(int id);
     Task<AuditIndexModel<TAuditAction, TEnum>?> GetIndexAsync(int id);
     Task<AuditHistoryModel<TAuditAction, TEnum>?> GetHistoryAsync(string name, string entityId);
 }
 
-public sealed class AuditActionRepository<TAuditAction, TEnum> : StandartRepository<TAuditAction>, IAuditActionRepository<TAuditAction, TEnum>
+public sealed class AuditActionRepository<TAuditAction, TEnum, TColor> : StandartRepository<TAuditAction>, IAuditActionRepository<TAuditAction, TEnum, TColor>
     where TAuditAction : class, IAuditAction<TEnum>
     where TEnum : struct, Enum
+    where TColor : struct, Enum
 {
-    public IAuditSchemeManager<TEnum> SchemeManager { get; private set; }
+    public IAuditSchemeManager<TEnum, TColor> SchemeManager { get; private set; }
     public IAuditPropertyManager PropertyManager { get; private set; }
-    public AuditActionRepository(DbContext context, IAuditSchemeManager<TEnum> schemeManager, IAuditPropertyManager propertyManager) : base(context)
+    public AuditActionRepository(DbContext context, IAuditSchemeManager<TEnum, TColor> schemeManager, IAuditPropertyManager propertyManager) : base(context)
     {
         SchemeManager = schemeManager;
         PropertyManager = propertyManager;

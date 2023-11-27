@@ -16,14 +16,15 @@ public struct PostponedAuditStorageKey
         ActionType = actionType;
     }
 }
-public interface IPostponedAuditManager<TAuditAction, TEnum>
+public interface IPostponedAuditManager<TAuditAction, TEnum, TColor>
     where TAuditAction : class, IAuditAction<TEnum>
 	where TEnum : struct, Enum
+    where TColor : struct, Enum
 {
     IServiceProvider ServiceProvider { get; }
     IAuditActionFactory<TAuditAction, TEnum> ActionFactory { get; }
-    IAuditSchemeManager<TEnum> SchemeManager { get; }
-    PostponedAuditStorage<T, TAuditResult, TAuditAction, TEnum> GetOrAddStorage<T, TAuditResult>()
+    IAuditSchemeManager<TEnum, TColor> SchemeManager { get; }
+    PostponedAuditStorage<T, TAuditResult, TAuditAction, TEnum, TColor> GetOrAddStorage<T, TAuditResult>()
         where T : class, IAuditable<TAuditResult, TAuditAction, TEnum>
         where TAuditResult : class, IAuditResult<TAuditAction, TEnum>;
     void PostponeCreate<T, TAuditResult>(T model, TEnum? type = null, object? additional = null, bool custom = false)
@@ -46,36 +47,37 @@ public interface IPostponedAuditManager<TAuditAction, TEnum>
 		where TAuditResult : class, IAuditResult<TAuditAction, TEnum>;
 	Task ExecuteAndDispose();
 }
-public sealed class PostponedAuditManager<TContext, TAuditAction, TEnum> : IPostponedAuditManager<TAuditAction, TEnum>
+public sealed class PostponedAuditManager<TContext, TAuditAction, TEnum, TColor> : IPostponedAuditManager<TAuditAction, TEnum, TColor>
     where TAuditAction : class, IAuditAction<TEnum>
     where TContext : DbContext
 	where TEnum : struct, Enum
+    where TColor : struct, Enum
 {
-    private Dictionary<PostponedAuditStorageKey, IPosponedActionsStorage<TAuditAction, TEnum>> _storages;
-    private ILogger<PostponedAuditManager<TContext, TAuditAction, TEnum>> _logger;
+    private Dictionary<PostponedAuditStorageKey, IPosponedActionsStorage<TAuditAction, TEnum, TColor>> _storages;
+    private ILogger<PostponedAuditManager<TContext, TAuditAction, TEnum, TColor>> _logger;
     public IServiceProvider ServiceProvider { get; private set; }
     public IAuditActionFactory<TAuditAction, TEnum> ActionFactory { get; private set; }
-    public IAuditSchemeManager<TEnum> SchemeManager { get; private set; }
-    public PostponedAuditManager(IServiceProvider provider, ILoggerFactory loggerFactory, IAuditSchemeManager<TEnum> schemeManager, IAuditActionFactory<TAuditAction, TEnum> actionFactory)
+    public IAuditSchemeManager<TEnum, TColor> SchemeManager { get; private set; }
+    public PostponedAuditManager(IServiceProvider provider, ILoggerFactory loggerFactory, IAuditSchemeManager<TEnum, TColor> schemeManager, IAuditActionFactory<TAuditAction, TEnum> actionFactory)
     {
         ServiceProvider = provider;
         SchemeManager = schemeManager;
         ActionFactory = actionFactory;
-        _logger = loggerFactory.CreateLogger<PostponedAuditManager<TContext, TAuditAction, TEnum>>();
-        _storages = new Dictionary<PostponedAuditStorageKey, IPosponedActionsStorage<TAuditAction, TEnum>>();
+        _logger = loggerFactory.CreateLogger<PostponedAuditManager<TContext, TAuditAction, TEnum, TColor>>();
+        _storages = new Dictionary<PostponedAuditStorageKey, IPosponedActionsStorage<TAuditAction, TEnum , TColor>>();
     }
 
-    public PostponedAuditStorage<T, TAuditResult, TAuditAction, TEnum> GetOrAddStorage<T, TAuditResult>()
+    public PostponedAuditStorage<T, TAuditResult, TAuditAction, TEnum, TColor> GetOrAddStorage<T, TAuditResult>()
         where T : class, IAuditable<TAuditResult, TAuditAction, TEnum>
         where TAuditResult : class, IAuditResult<TAuditAction , TEnum>
     {
         var key = new PostponedAuditStorageKey(typeof(T), typeof(TAuditResult));
         if (!_storages.TryGetValue(key, out var storage))
         {
-            storage = new PostponedAuditStorage<T, TAuditResult, TAuditAction, TEnum>(this);
+            storage = new PostponedAuditStorage<T, TAuditResult, TAuditAction, TEnum, TColor>(this);
             _storages.Add(key, storage);
         }
-        return (PostponedAuditStorage<T, TAuditResult, TAuditAction, TEnum>)storage;
+        return (PostponedAuditStorage<T, TAuditResult, TAuditAction, TEnum, TColor>)storage;
     }
 
     #region Create
