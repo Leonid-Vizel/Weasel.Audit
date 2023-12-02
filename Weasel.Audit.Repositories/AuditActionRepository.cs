@@ -1,5 +1,4 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using System.Drawing;
 using Weasel.Audit.Enums;
 using Weasel.Audit.Extensions;
 using Weasel.Audit.Interfaces;
@@ -18,6 +17,7 @@ public interface IAuditActionRepository<TAuditAction, TEnum, TColor> : IStandart
     Task<IAuditAction<TEnum>?> FindAsync(int id);
     Task<AuditIndexModel<TAuditAction, TEnum>?> GetIndexAsync(int id);
     Task<AuditHistoryModel<TAuditAction, TEnum>?> GetHistoryAsync(string name, string entityId);
+    Task<AuditInfoModel<TAuditAction, TEnum>?> GetHistoryStateAsync(string name, string entityId, DateTime time);
 }
 
 public sealed class AuditActionRepository<TAuditAction, TEnum, TColor> : StandartRepository<TAuditAction>, IAuditActionRepository<TAuditAction, TEnum, TColor>
@@ -114,6 +114,31 @@ public sealed class AuditActionRepository<TAuditAction, TEnum, TColor> : Standar
             });
         }
         model.Check();
+        return model;
+    }
+
+    public async Task<AuditInfoModel<TAuditAction, TEnum>?> GetHistoryStateAsync(string name, string entityId, DateTime time)
+    {
+        var type = SchemeManager.GetTypeBySearchName(name);
+        if (type == null)
+        {
+            return null;
+        }
+        var rowsQuery = Context.IncludeAuditResult<TAuditAction, TEnum>(type);
+        if (rowsQuery == null)
+        {
+            return null;
+        }
+        var item = await rowsQuery.FirstOrDefaultAsync(x => x.Action.EntityId == entityId && x.Action.DateTime <= time);
+        if (item == null)
+        {
+            return null;
+        }
+        var model = new AuditInfoModel<TAuditAction, TEnum>()
+        {
+            Action = item.Action,
+            Items = PropertyManager.GetEntityDisplayData(type, item)
+        };
         return model;
     }
 }
