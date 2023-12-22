@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System.Collections;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Reflection.Emit;
 using Weasel.Audit.Attributes.Display;
@@ -26,6 +27,8 @@ public sealed class AuditPropertyManager : IAuditPropertyManager
     {
         Storage = storage;
     }
+
+    [RequiresDynamicCode("Not AOT friendly: System.Reflection.Emit is used")]
     public Func<object, object>? CreatePropertyGetter(PropertyInfo info)
     {
         if (info.DeclaringType == null)
@@ -50,6 +53,7 @@ public sealed class AuditPropertyManager : IAuditPropertyManager
 
         return (Func<object, object>)method.CreateDelegate(typeof(Func<object, object>));
     }
+    [RequiresDynamicCode("Not AOT friendly: System.Reflection.Emit is used")]
     public Action<object, object>? CreatePropertySetter(PropertyInfo info)
     {
         if (info.DeclaringType == null)
@@ -75,10 +79,7 @@ public sealed class AuditPropertyManager : IAuditPropertyManager
     }
     public void PerformUpdate<T>(DbContext context, T old, T update)
     {
-        if (context == null)
-        {
-            throw new ArgumentNullException(nameof(context));
-        }
+        ArgumentNullException.ThrowIfNull(context);
         if (old == null)
         {
             throw new ArgumentNullException(nameof(old));
@@ -109,14 +110,8 @@ public sealed class AuditPropertyManager : IAuditPropertyManager
     }
     public void PerformUpdateRange<T>(DbContext context, IReadOnlyList<Tuple<T, T>> updateData)
     {
-        if (context == null)
-        {
-            throw new ArgumentNullException(nameof(context));
-        }
-        if (updateData == null)
-        {
-            throw new ArgumentNullException(nameof(updateData));
-        }
+        ArgumentNullException.ThrowIfNull(context);
+        ArgumentNullException.ThrowIfNull(updateData);
         bool performCustom = typeof(T).IsAssignableTo(typeof(ICustomUpdatable<T>));
         var props = Storage.GetAuditPropertyData(this, typeof(T));
         foreach (var pair in updateData)
@@ -125,11 +120,11 @@ public sealed class AuditPropertyManager : IAuditPropertyManager
             var update = pair.Item2;
             if (old == null)
             {
-                throw new ArgumentNullException(nameof(old));
+                throw new Exception("\"old\" value should not be null!");
             }
             if (update == null)
             {
-                throw new ArgumentNullException(nameof(update));
+                throw new Exception("\"update\" value should not be null!");
             }
             if (performCustom)
             {
@@ -156,8 +151,7 @@ public sealed class AuditPropertyManager : IAuditPropertyManager
         switch (mode)
         {
             case AuditPropertyDisplayMode.Collection:
-                ICollection? values = value as ICollection;
-                if (values == null || values.Count == 0)
+                if (value is not ICollection values || values.Count == 0)
                 {
                     return new List<AuditPropertyDisplayModel>();
                 }
@@ -194,7 +188,7 @@ public sealed class AuditPropertyManager : IAuditPropertyManager
     public List<AuditPropertyDisplayModel> GetEntityDisplayData(Type type, object? model)
     {
         var props = Storage.GetAuditPropertyData(this, type);
-        List<AuditPropertyDisplayModel> items = new List<AuditPropertyDisplayModel>();
+        var items = new List<AuditPropertyDisplayModel>();
         foreach (var prop in props)
         {
             if (prop.Getter == null)

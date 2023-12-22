@@ -35,7 +35,7 @@ public sealed class PostponedAuditStorage<T, TAuditResult, TAuditAction, TEnum, 
 	where TEnum : struct, Enum
     where TColor : struct, Enum
 {
-    private List<PostponedModelData<T, TEnum>> _postponedModels;
+    private readonly List<PostponedModelData<T, TEnum>> _postponedModels;
 
     public IPostponedAuditManager<TAuditAction, TEnum, TColor> PostponedAuditManager { get; private set; }
     public IAuditActionFactory<TAuditAction, TEnum> ActionFactory => PostponedAuditManager.ActionFactory;
@@ -43,7 +43,7 @@ public sealed class PostponedAuditStorage<T, TAuditResult, TAuditAction, TEnum, 
     public PostponedAuditStorage(IPostponedAuditManager<TAuditAction, TEnum, TColor> postponedAuditManager)
     {
         PostponedAuditManager = postponedAuditManager;
-        _postponedModels = new List<PostponedModelData<T, TEnum>>();
+        _postponedModels = [];
     }
 
     #region Postpone
@@ -72,7 +72,7 @@ public sealed class PostponedAuditStorage<T, TAuditResult, TAuditAction, TEnum, 
     }
     public async Task PlanPerformActionsAsync(DbContext context)
     {
-        List<TAuditResult> actionAddList = new List<TAuditResult>();
+        List<TAuditResult> actionAddList = [];
         await PlanAddActionsAsync(context, actionAddList);
         await context.AddRangeAsync(actionAddList);
     }
