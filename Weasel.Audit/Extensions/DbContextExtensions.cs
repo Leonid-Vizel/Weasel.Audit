@@ -22,10 +22,8 @@ public struct IncludeAllCacheKey
 
 public static class DbContextExtensions
 {
-    private static ConcurrentDictionary<IncludeAllCacheKey, List<string>> _actionIncludePaths
-        = new ConcurrentDictionary<IncludeAllCacheKey, List<string>>();
-    private static ConcurrentDictionary<Type, IReadOnlyList<IProperty>> _typePrimaryKeys
-        = new ConcurrentDictionary<Type, IReadOnlyList<IProperty>>();
+    private static readonly ConcurrentDictionary<IncludeAllCacheKey, List<string>> _actionIncludePaths= [];
+    private static readonly ConcurrentDictionary<Type, IReadOnlyList<IProperty>> _typePrimaryKeys = [];
     private static readonly MethodInfo setMethod
         = typeof(DbContext).GetMethods().Single(p => p.Name == nameof(DbContext.Set) && p.ContainsGenericParameters && p.GetParameters().Length == 0);
 
@@ -112,14 +110,8 @@ public static class DbContextExtensions
     }
     public static string GetAuditEntityId(this DbContext context, object model)
     {
-        if (context == null)
-        {
-            throw new ArgumentNullException(nameof(context));
-        }
-        if (model == null)
-        {
-            throw new ArgumentNullException(nameof(model));
-        }
+        ArgumentNullException.ThrowIfNull(context);
+        ArgumentNullException.ThrowIfNull(model);
         var entry = context.Entry(model);
         var properties = context.FindEntityPrimaryKeys(model);
         string?[] keys = new string[properties.Count];
@@ -131,14 +123,8 @@ public static class DbContextExtensions
     }
     public static IReadOnlyList<IProperty> FindEntityPrimaryKeys(this DbContext context, object model)
     {
-        if (context == null)
-        {
-            throw new ArgumentNullException(nameof(context));
-        }
-        if (model == null)
-        {
-            throw new ArgumentNullException(nameof(model));
-        }
+        ArgumentNullException.ThrowIfNull(context);
+        ArgumentNullException.ThrowIfNull(model);
         Type type = model.GetType();
         if (_typePrimaryKeys.TryGetValue(type, out var list))
         {

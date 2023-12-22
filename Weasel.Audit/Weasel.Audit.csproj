@@ -33,7 +33,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.0" />
-    <PackageReference Include="Weasel.Tools.Extensions.Common" Version="8.0.2" />
+    <PackageReference Include="Weasel.Tools.Extensions.Common" Version="8.0.8" />
   </ItemGroup>
 
 </Project>

@@ -43,17 +43,17 @@ public struct AuditPropertyCache
             info.DeclaringType?.GetCustomAttribute<AuditDisplayStrategyAttribute>() ??
             new StandartAuditDisplayAttribute();
     }
-    public AuditPropertyDisplayMode GetDisplayMode(object? declare, object? value)
+    public readonly AuditPropertyDisplayMode GetDisplayMode(object? declare, object? value)
         => DisplayStrategy.GetDisplayMode(Info, declare, value);
-    public string GetRowName(int index, object? declare, object? value)
+    public readonly string GetRowName(int index, object? declare, object? value)
         => DisplayStrategy.GetRowName(index, Info, declare, value);
-    public object? FormatValue(object? declare, object? value)
+    public readonly object? FormatValue(object? declare, object? value)
         => DisplayStrategy.GetDisplayMode(Info, declare, value);
-    public Type? GetCollectionType(object? declare, object? value)
+    public readonly Type? GetCollectionType(object? declare, object? value)
         => DisplayStrategy.GetCollectionType(Info, declare, value);
-    public bool Compare(DbContext context, object? old, object? update, object? oldValue, object? updateValue)
+    public readonly bool Compare(DbContext context, object? old, object? update, object? oldValue, object? updateValue)
         => UpdateStrategy.Compare(context, old, update, oldValue, updateValue);
-    public object? SetValue(DbContext context, object? old, object? update, object? oldValue, object? updateValue)
+    public readonly object? SetValue(DbContext context, object? old, object? update, object? oldValue, object? updateValue)
         => UpdateStrategy.SetValue(context, old, update, oldValue, updateValue);
 }
 
@@ -80,7 +80,7 @@ public sealed class AuditPropertyStorage : IAuditPropertyStorage
         foreach (var info in properties)
         {
             var key = new AuditPropertyCacheKey(info);
-            var createFunc = (AuditPropertyCacheKey key) => new AuditPropertyCache(manager, info);
+            AuditPropertyCache createFunc(AuditPropertyCacheKey key) => new AuditPropertyCache(manager, info);
             var cache = CachedProperties.GetOrAdd(key, createFunc);
             data.Add(cache);
         }

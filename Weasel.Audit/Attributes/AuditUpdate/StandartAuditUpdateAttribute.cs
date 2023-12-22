@@ -25,34 +25,25 @@ public class StandartAuditUpdateAttribute : AuditUpdateStrategyAttribute
         switch (oldValue)
         {
             case float f1:
-                switch (updateValue)
+                return updateValue switch
                 {
-                    case double d2:
-                        return f1 == d2;
-                    case IConvertible c2:
-                        return f1 == c2.ToSingle(null);
-                    default:
-                        return false;
-                }
-
+                    double d2 => f1 == d2,
+                    IConvertible c2 => f1 == c2.ToSingle(null),
+                    _ => false,
+                };
             case double d1:
                 return updateValue is IConvertible conv2
                     ? d1 == conv2.ToDouble(null)
                     : false;
 
             case IConvertible c1:
-                switch (updateValue)
+                return updateValue switch
                 {
-                    case float f2:
-                        return c1.ToSingle(null) == f2;
-                    case double d2:
-                        return c1.ToDouble(null) == d2;
-                    case IConvertible c2:
-                        return c1.ToDecimal(null) == c2.ToDecimal(null);
-                    default:
-                        return false;
-                }
-
+                    float f2 => c1.ToSingle(null) == f2,
+                    double d2 => c1.ToDouble(null) == d2,
+                    IConvertible c2 => c1.ToDecimal(null) == c2.ToDecimal(null),
+                    _ => false,
+                };
             default:
                 return false;
         }

@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using System.Collections.Frozen;
 using System.Reflection;
 using Weasel.Audit.Attributes.Enums;
 using Weasel.Audit.Enums;
@@ -37,17 +38,17 @@ public sealed class AuditSchemeManager<TEnum, TColor> : IAuditSchemeManager<TEnu
     where TColor : struct, Enum
 {
     private readonly ConcurrentDictionary<Type, List<TEnum>> _typeActions;
-    private readonly ConcurrentDictionary<TEnum, AuditDescAttribute> _enumDescriptions;
-    private readonly ConcurrentDictionary<Enum, AuditColorAttribute> _colorDescriptions;
-    private readonly ConcurrentDictionary<string, Type> _auditTypeSearchDictionary;
     private readonly ConcurrentDictionary<TypeAuditSchemeKey, TEnum[]> _typeSchemaActions;
+    private readonly FrozenDictionary<TEnum, AuditDescAttribute> _enumDescriptions;
+    private readonly FrozenDictionary<Enum, AuditColorAttribute> _colorDescriptions;
+    private readonly FrozenDictionary<string, Type> _auditTypeSearchDictionary;
     public AuditSchemeManager()
     {
-        _colorDescriptions = new ConcurrentDictionary<Enum, AuditColorAttribute>();
         _typeActions = new ConcurrentDictionary<Type, List<TEnum>>();
         _typeSchemaActions = new ConcurrentDictionary<TypeAuditSchemeKey, TEnum[]>();
-        _enumDescriptions = new ConcurrentDictionary<TEnum, AuditDescAttribute>();
-        _auditTypeSearchDictionary = new ConcurrentDictionary<string, Type>();
+        var colorDescDict = new Dictionary<Enum, AuditColorAttribute>();
+        var enumDescDict = new Dictionary<TEnum, AuditDescAttribute>();
+        var auditTypeSearchDict = new Dictionary<string, Type>();
         foreach (TEnum type in Enum.GetValues<TEnum>())
         {
             var decription = GetAuditEnumDescription(type);
@@ -55,8 +56,8 @@ public sealed class AuditSchemeManager<TEnum, TColor> : IAuditSchemeManager<TEnu
             {
                 throw new ArgumentNullException($"Provide {nameof(AuditDescAttribute)} attribute for {type}!");
             }
-            _enumDescriptions.TryAdd(type, decription);
-            _auditTypeSearchDictionary.TryAdd(decription.SearchTypeName, decription.Type);
+            enumDescDict.TryAdd(type, decription);
+            auditTypeSearchDict.TryAdd(decription.SearchTypeName, decription.Type);
         }
         foreach (TColor color in Enum.GetValues<TColor>())
         {
@@ -65,8 +66,11 @@ public sealed class AuditSchemeManager<TEnum, TColor> : IAuditSchemeManager<TEnu
             {
                 continue;
             }
-            _colorDescriptions.TryAdd(color, description);
+            colorDescDict.TryAdd(color, description);
         }
+        _enumDescriptions = enumDescDict.ToFrozenDictionary();
+        _colorDescriptions = colorDescDict.ToFrozenDictionary();
+        _auditTypeSearchDictionary = auditTypeSearchDict.ToFrozenDictionary();
     }
 
     #region GetTypeBySearchName
@@ -82,21 +86,7 @@ public sealed class AuditSchemeManager<TEnum, TColor> : IAuditSchemeManager<TEnu
 
     #region GetAuditEnumDescription
     public AuditDescAttribute? GetAuditEnumDescription(TEnum type)
-    {
-        if (_enumDescriptions.TryGetValue(type, out var value))
-        {
-            return value;
-        }
-        value = type.GetType()
-            .GetMember(type.ToString())
-            .FirstOrDefault()?
-            .GetCustomAttribute<AuditDescAttribute>();
-        if (value != null)
-        {
-            _enumDescriptions[type] = value;
-        }
-        return value;
-    }
+        => _enumDescriptions[type];
     #endregion
 
     #region GetAuditColorDescription

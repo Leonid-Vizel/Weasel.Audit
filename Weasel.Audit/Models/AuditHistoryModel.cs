@@ -14,7 +14,7 @@ public sealed class AuditHistoryModel<TAuditAction, TEnum>
 
     public AuditHistoryModel() : base()
     {
-        Actions = new List<AuditHistoryStateModel<TAuditAction, TEnum>>();
+        Actions = [];
     }
     public AuditHistoryModel(Type type, string entityId) : this()
     {
