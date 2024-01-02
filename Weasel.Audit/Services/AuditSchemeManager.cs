@@ -50,13 +50,13 @@ public sealed class AuditSchemeManager<TEnum, TColor> : IAuditSchemeManager<TEnu
         var colorDescDict = new Dictionary<Enum, AuditColorAttribute>();
         var enumDescDict = new Dictionary<TEnum, AuditDescAttribute>();
         var auditTypeSearchDict = new Dictionary<string, Type>();
-        var enumType = typeof(TColor);
+        var enumType = typeof(TEnum);
         foreach (TEnum type in Enum.GetValues<TEnum>())
         {
             var decription = enumType.GetMember(type.ToString()).FirstOrDefault()?.GetCustomAttribute<AuditDescAttribute>();
             if (decription == null)
             {
-                throw new ArgumentNullException($"Provide {nameof(AuditDescAttribute)} attribute for {type}!");
+                throw new Exception($"Provide {nameof(AuditDescAttribute)} attribute for {type}!");
             }
             enumDescDict.TryAdd(type, decription);
             auditTypeSearchDict.TryAdd(decription.SearchTypeName, decription.Type);
