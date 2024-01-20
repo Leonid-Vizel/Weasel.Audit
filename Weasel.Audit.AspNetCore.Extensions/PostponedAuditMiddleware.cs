@@ -6,9 +6,9 @@ namespace Weasel.Audit.AspNetCore.Extensions;
 
 public sealed class PostponedAuditMiddleware<TAction, TRow, TEnum, TColor>
     where TAction : class, IAuditAction<TRow, TEnum>
-	where TEnum : struct, Enum
+    where TRow : IAuditRow<TEnum>
     where TColor : struct, Enum
-    where TRow : IAuditRow
+	where TEnum : struct, Enum
 {
     private readonly RequestDelegate _next;
     public PostponedAuditMiddleware(RequestDelegate next)

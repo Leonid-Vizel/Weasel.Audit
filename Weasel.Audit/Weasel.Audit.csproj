@@ -10,8 +10,8 @@
     <Company>Vizel Leonid</Company>
     <Product>Weasel</Product>
     <Authors>Vizel Leonid</Authors>
-    <Description>CAPABILITY BROKEN, MIGRATION NEEDED + SYNC WITH OTEHR PACKAGES</Description>
-    <PackageReleaseNotes>Fixes</PackageReleaseNotes>
+    <Description>User actions audit library</Description>
+    <PackageReleaseNotes>CAPABILITY BROKEN, MIGRATION NEEDED + SYNC WITH OTEHR PACKAGES</PackageReleaseNotes>
     <PackageIcon>weasel.png</PackageIcon>
     <RepositoryType>git</RepositoryType>
     <PackageTags>Weasel Audit</PackageTags>

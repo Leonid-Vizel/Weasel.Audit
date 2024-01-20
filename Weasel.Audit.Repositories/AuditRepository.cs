@@ -1,7 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query;
 using Microsoft.Extensions.Logging;
-using System.Drawing;
 using System.Linq.Expressions;
 using Weasel.Audit.Interfaces;
 using Weasel.Audit.Services;
@@ -12,9 +11,9 @@ public interface IAuditRepository<T, TResult, TAction, TRow, TEnum, TColor>
     where TResult : class, IAuditResult<TAction, TRow, TEnum>
     where T : class, IAuditable<TResult, TAction, TRow, TEnum>
     where TAction : class, IAuditAction<TRow, TEnum>
-    where TEnum : struct, Enum
+    where TRow : IAuditRow<TEnum>
     where TColor : struct, Enum
-    where TRow : IAuditRow
+    where TEnum : struct, Enum
 {
     DbContext Context { get; }
     IPostponedAuditManager<TAction, TRow, TEnum, TColor> AuditManager { get; }
@@ -78,9 +77,9 @@ public class AuditRepository<T, TResult, TAction, TRow, TEnum, TColor> : IAuditR
     where T : class, IAuditable<TResult, TAction, TRow, TEnum>
     where TResult : class, IAuditResult<TAction, TRow, TEnum>
     where TAction: class, IAuditAction<TRow, TEnum>
-	where TEnum : struct, Enum
+    where TRow : IAuditRow<TEnum>
     where TColor : struct, Enum
-    where TRow : IAuditRow
+	where TEnum : struct, Enum
 {
     public DbSet<T> Set { get; private set; }
     public DbSet<TResult> ActionSet { get; private set; }

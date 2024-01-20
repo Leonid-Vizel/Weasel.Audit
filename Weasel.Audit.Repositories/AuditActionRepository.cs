@@ -9,9 +9,9 @@ namespace Weasel.Audit.Repositories;
 
 public interface IAuditActionRepository<TAction, TRow, TEnum, TColor> : IStandartRepository<TAction>
     where TAction : class, IAuditAction<TRow, TEnum>
-    where TEnum : struct, Enum
+    where TRow : IAuditRow<TEnum>
     where TColor : struct, Enum
-    where TRow : IAuditRow
+    where TEnum : struct, Enum
 {
     IAuditSchemeManager<TEnum, TColor> SchemeManager { get; }
     IAuditPropertyManager PropertyManager { get; }
@@ -23,9 +23,9 @@ public interface IAuditActionRepository<TAction, TRow, TEnum, TColor> : IStandar
 
 public sealed class AuditActionRepository<TAction, TRow, TEnum, TColor> : StandartRepository<TAction>, IAuditActionRepository<TAction, TRow, TEnum, TColor>
     where TAction : class, IAuditAction<TRow, TEnum>
-    where TEnum : struct, Enum
+    where TRow : IAuditRow<TEnum>
     where TColor : struct, Enum
-    where TRow : IAuditRow
+    where TEnum : struct, Enum
 {
     public IAuditSchemeManager<TEnum, TColor> SchemeManager { get; private set; }
     public IAuditPropertyManager PropertyManager { get; private set; }
@@ -38,12 +38,12 @@ public sealed class AuditActionRepository<TAction, TRow, TEnum, TColor> : Standa
         => await Set.FindAsync(id);
     public async Task<AuditIndexModel<TAction, TRow, TEnum>?> GetIndexAsync(int id)
     {
-        var found = await Set.FindAsync(id);
+        var found = await Set.Include(x => x.Row).FirstOrDefaultAsync(x => x.Id == id);
         if (found == null)
         {
             return null;
         }
-        var description = SchemeManager.GetAuditEnumDescription(found.Type);
+        var description = SchemeManager.GetAuditEnumDescription(found.Row.Type);
         if (description == null)
         {
             return null;
@@ -106,7 +106,7 @@ public sealed class AuditActionRepository<TAction, TRow, TEnum, TColor> : Standa
         {
             return null;
         }
-        var rows = await rowsQuery.Where(x=>x.Action.EntityId == entityId).OrderBy(x => x.Action.DateTime).ThenBy(x => x.Id).ToListAsync();
+        var rows = await rowsQuery.Where(x => x.Action.EntityId == entityId).OrderBy(x => x.Action.Row.DateTime).ThenBy(x => x.Id).ToListAsync();
         foreach (var row in rows)
         {
             model.Actions.Add(new AuditHistoryStateModel<TAction, TRow, TEnum>()
@@ -131,7 +131,7 @@ public sealed class AuditActionRepository<TAction, TRow, TEnum, TColor> : Standa
         {
             return null;
         }
-        var item = await rowsQuery.FirstOrDefaultAsync(x => x.Action.EntityId == entityId && x.Action.DateTime <= time);
+        var item = await rowsQuery.FirstOrDefaultAsync(x => x.Action.EntityId == entityId && x.Action.Row.DateTime <= time);
         if (item == null)
         {
             return null;

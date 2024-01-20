@@ -7,9 +7,9 @@ public static class AuditBuilderExtensions
 {
     public static IApplicationBuilder UseAudit<TAction, TRow, TEnum, TColor>(this IApplicationBuilder builder)
         where TAction : class, IAuditAction<TRow, TEnum>
-		where TEnum : struct, Enum
+        where TRow : IAuditRow<TEnum>
         where TColor : struct, Enum
-        where TRow : IAuditRow
+		where TEnum : struct, Enum
     {
         if (builder == null)
         {
