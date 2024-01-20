@@ -7,23 +7,24 @@ namespace Weasel.Audit.DependencyInjection.Extensions;
 
 public static class AuditServiceCollectionExtensions
 {
-    public static IServiceCollection AddAudit<TDbContext, TFactoryImplementation, TAuditAction, TEnum, TColor>(this IServiceCollection services)
-        where TFactoryImplementation : class, IAuditActionFactory<TAuditAction, TEnum>
-        where TAuditAction : class, IAuditAction<TEnum>
+    public static IServiceCollection AddAudit<TDbContext, TFactory, TAction, TRow, TEnum, TColor>(this IServiceCollection services)
+        where TFactory : class, IAuditActionFactory<TAction, TRow, TEnum>
+        where TAction : class, IAuditAction<TRow, TEnum>
         where TDbContext : DbContext
 		where TEnum : struct, Enum
         where TColor : struct, Enum
+        where TRow : IAuditRow
     {
         if (services == null)
         {
             throw new ArgumentNullException(nameof(services));
         }
         services.AddSingleton<IAuditPropertyStorage, AuditPropertyStorage>();
-        services.AddSingleton<IAuditActionFactory<TAuditAction, TEnum>, TFactoryImplementation>();
+        services.AddSingleton<IAuditActionFactory<TAction, TRow, TEnum>, TFactory>();
         var manager = new AuditSchemeManager<TEnum, TColor>();
         services.AddSingleton<IAuditSchemeManager<TEnum, TColor>, AuditSchemeManager<TEnum, TColor>>((x) => manager);
         services.AddScoped<IAuditPropertyManager, AuditPropertyManager>();
-        services.AddScoped<IPostponedAuditManager<TAuditAction, TEnum, TColor>, PostponedAuditManager<TDbContext, TAuditAction, TEnum, TColor>>();
+        services.AddScoped<IPostponedAuditManager<TAction, TRow, TEnum, TColor>, PostponedAuditManager<TDbContext, TAction, TRow, TEnum, TColor>>();
         return services;
     }
 }

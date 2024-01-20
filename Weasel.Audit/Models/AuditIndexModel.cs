@@ -1,11 +1,11 @@
-﻿using System;
-using Weasel.Audit.Interfaces;
+﻿using Weasel.Audit.Interfaces;
 
 namespace Weasel.Audit.Models;
 
-public abstract class AuditIndexModel<TAuditAction, TEnum>
-    where TAuditAction : class, IAuditAction<TEnum>
+public abstract class AuditIndexModel<TAction, TRow, TEnum>
+    where TAction : class, IAuditAction<TRow, TEnum>
+    where TRow : IAuditRow<TEnum>
 	where TEnum : struct, Enum
 {
-    public TAuditAction Action { get; set; } = null!;
+    public TAction Action { get; set; } = null!;
 }

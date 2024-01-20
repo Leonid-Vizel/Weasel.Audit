@@ -1,7 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using System;
 using Weasel.Audit.Enums;
 using Weasel.Audit.Interfaces;
 
@@ -16,129 +15,138 @@ public struct PostponedAuditStorageKey
         ActionType = actionType;
     }
 }
-public interface IPostponedAuditManager<TAuditAction, TEnum, TColor>
-    where TAuditAction : class, IAuditAction<TEnum>
-    where TEnum : struct, Enum
+public interface IPostponedAuditManager<TAction, TRow, TEnum, TColor>
+    where TAction : class, IAuditAction<TRow, TEnum>
+    where TRow : IAuditRow<TEnum>
     where TColor : struct, Enum
+    where TEnum : struct, Enum
 {
     IServiceProvider ServiceProvider { get; }
-    IAuditActionFactory<TAuditAction, TEnum> ActionFactory { get; }
+    IAuditActionFactory<TAction, TRow, TEnum> ActionFactory { get; }
+    IAuditRowFactory<TRow, TEnum> RowFactory { get; }
     IAuditSchemeManager<TEnum, TColor> SchemeManager { get; }
-    PostponedAuditStorage<T, TAuditResult, TAuditAction, TEnum, TColor> GetOrAddStorage<T, TAuditResult>()
-        where T : class, IAuditable<TAuditResult, TAuditAction, TEnum>
-        where TAuditResult : class, IAuditResult<TAuditAction, TEnum>;
-    void PostponeCreate<T, TAuditResult>(T model, TEnum? type = null, object? additional = null, bool custom = false)
-        where T : class, IAuditable<TAuditResult, TAuditAction, TEnum>
-        where TAuditResult : class, IAuditResult<TAuditAction, TEnum>;
-    void PostponeCreateRange<T, TAuditResult>(IEnumerable<T> models, TEnum? type = null, object? additional = null, bool custom = false)
-        where T : class, IAuditable<TAuditResult, TAuditAction, TEnum>
-        where TAuditResult : class, IAuditResult<TAuditAction, TEnum>;
-    void PostponeUpdate<T, TAuditResult>(T model, TEnum? type = null, object? additional = null, bool custom = false)
-        where T : class, IAuditable<TAuditResult, TAuditAction, TEnum>
-        where TAuditResult : class, IAuditResult<TAuditAction, TEnum>;
-    void PostponeUpdateRange<T, TAuditResult>(IEnumerable<T> models, TEnum? type = null, object? additional = null, bool custom = false)
-        where T : class, IAuditable<TAuditResult, TAuditAction, TEnum>
-        where TAuditResult : class, IAuditResult<TAuditAction, TEnum>;
-    void PostponeDelete<T, TAuditResult>(T model, TEnum? type = null, object? additional = null, bool custom = false)
-        where T : class, IAuditable<TAuditResult, TAuditAction, TEnum>
-        where TAuditResult : class, IAuditResult<TAuditAction, TEnum>;
-    void PostponeDeleteRange<T, TAuditResult>(IEnumerable<T> models, TEnum? type = null, object? additional = null, bool custom = false)
-        where T : class, IAuditable<TAuditResult, TAuditAction, TEnum>
-        where TAuditResult : class, IAuditResult<TAuditAction, TEnum>;
+    PostponedAuditStorage<T, TResult, TAction, TRow, TEnum, TColor> GetOrAddStorage<T, TResult>()
+        where T : class, IAuditable<TResult, TAction, TRow, TEnum>
+        where TResult : class, IAuditResult<TAction, TRow, TEnum>;
+    void PostponeCreate<T, TResult>(T model, TEnum? type = null, object? additional = null, bool custom = false)
+        where T : class, IAuditable<TResult, TAction, TRow, TEnum>
+        where TResult : class, IAuditResult<TAction, TRow, TEnum>;
+    void PostponeCreateRange<T, TResult>(IEnumerable<T> models, TEnum? type = null, object? additional = null, bool custom = false, bool grouped = false)
+        where T : class, IAuditable<TResult, TAction, TRow, TEnum>
+        where TResult : class, IAuditResult<TAction, TRow, TEnum>;
+    void PostponeUpdate<T, TResult>(T model, TEnum? type = null, object? additional = null, bool custom = false)
+        where T : class, IAuditable<TResult, TAction, TRow, TEnum>
+        where TResult : class, IAuditResult<TAction, TRow, TEnum>;
+    void PostponeUpdateRange<T, TResult>(IEnumerable<T> models, TEnum? type = null, object? additional = null, bool custom = false, bool grouped = false)
+        where T : class, IAuditable<TResult, TAction, TRow, TEnum>
+        where TResult : class, IAuditResult<TAction, TRow, TEnum>;
+    void PostponeDelete<T, TResult>(T model, TEnum? type = null, object? additional = null, bool custom = false)
+        where T : class, IAuditable<TResult, TAction, TRow, TEnum>
+        where TResult : class, IAuditResult<TAction, TRow, TEnum>;
+    void PostponeDeleteRange<T, TResult>(IEnumerable<T> models, TEnum? type = null, object? additional = null, bool custom = false, bool grouped = false)
+        where T : class, IAuditable<TResult, TAction, TRow, TEnum>
+        where TResult : class, IAuditResult<TAction, TRow, TEnum>;
     Task ExecuteAndDispose();
 }
-public sealed class PostponedAuditManager<TContext, TAuditAction, TEnum, TColor> : IPostponedAuditManager<TAuditAction, TEnum, TColor>
-    where TAuditAction : class, IAuditAction<TEnum>
-    where TContext : DbContext
-    where TEnum : struct, Enum
+public sealed class PostponedAuditManager<TContext, TAction, TRow, TEnum, TColor> : IPostponedAuditManager<TAction, TRow, TEnum, TColor>
+    where TAction : class, IAuditAction<TRow, TEnum>
+    where TRow : IAuditRow<TEnum>
     where TColor : struct, Enum
+    where TEnum : struct, Enum
+    where TContext : DbContext
 {
-    private readonly Dictionary<PostponedAuditStorageKey, IPosponedActionsStorage<TAuditAction, TEnum, TColor>> _storages;
-    private readonly ILogger<PostponedAuditManager<TContext, TAuditAction, TEnum, TColor>> _logger;
+    private readonly Dictionary<PostponedAuditStorageKey, IPosponedActionsStorage<TAction, TRow, TEnum, TColor>> _storages;
+    private readonly ILogger<PostponedAuditManager<TContext, TAction, TRow, TEnum, TColor>> _logger;
     public IServiceProvider ServiceProvider { get; private set; }
-    public IAuditActionFactory<TAuditAction, TEnum> ActionFactory { get; private set; }
+    public IAuditActionFactory<TAction, TRow, TEnum> ActionFactory { get; private set; }
+    public IAuditRowFactory<TRow, TEnum> RowFactory { get; private set; }
     public IAuditSchemeManager<TEnum, TColor> SchemeManager { get; private set; }
-    public PostponedAuditManager(IServiceProvider provider, ILoggerFactory loggerFactory, IAuditSchemeManager<TEnum, TColor> schemeManager, IAuditActionFactory<TAuditAction, TEnum> actionFactory)
+    public PostponedAuditManager(IServiceProvider provider,
+        ILoggerFactory loggerFactory,
+        IAuditSchemeManager<TEnum, TColor> schemeManager,
+        IAuditActionFactory<TAction, TRow, TEnum> actionFactory,
+        IAuditRowFactory<TRow, TEnum> rowFactory)
     {
         ServiceProvider = provider;
         SchemeManager = schemeManager;
         ActionFactory = actionFactory;
-        _logger = loggerFactory.CreateLogger<PostponedAuditManager<TContext, TAuditAction, TEnum, TColor>>();
+        RowFactory = rowFactory;
+        _logger = loggerFactory.CreateLogger<PostponedAuditManager<TContext, TAction, TRow, TEnum, TColor>>();
         _storages = [];
     }
 
-    public PostponedAuditStorage<T, TAuditResult, TAuditAction, TEnum, TColor> GetOrAddStorage<T, TAuditResult>()
-        where T : class, IAuditable<TAuditResult, TAuditAction, TEnum>
-        where TAuditResult : class, IAuditResult<TAuditAction, TEnum>
+    public PostponedAuditStorage<T, TResult, TAction, TRow, TEnum, TColor> GetOrAddStorage<T, TResult>()
+        where T : class, IAuditable<TResult, TAction, TRow, TEnum>
+        where TResult : class, IAuditResult<TAction, TRow, TEnum>
     {
-        var key = new PostponedAuditStorageKey(typeof(T), typeof(TAuditResult));
+        var key = new PostponedAuditStorageKey(typeof(T), typeof(TResult));
         if (!_storages.TryGetValue(key, out var storage))
         {
-            storage = new PostponedAuditStorage<T, TAuditResult, TAuditAction, TEnum, TColor>(this);
+            storage = new PostponedAuditStorage<T, TResult, TAction, TRow, TEnum, TColor>(this);
             _storages.Add(key, storage);
         }
-        return (PostponedAuditStorage<T, TAuditResult, TAuditAction, TEnum, TColor>)storage;
+        return (PostponedAuditStorage<T, TResult, TAction, TRow, TEnum, TColor>)storage;
     }
 
     #region Create
-    public void PostponeCreate<T, TAuditResult>(T model, TEnum? type, object? additional = null, bool custom = false)
-        where T : class, IAuditable<TAuditResult, TAuditAction, TEnum>
-        where TAuditResult : class, IAuditResult<TAuditAction, TEnum>
+    public void PostponeCreate<T, TResult>(T model, TEnum? type, object? additional = null, bool custom = false)
+        where T : class, IAuditable<TResult, TAction, TRow, TEnum>
+        where TResult : class, IAuditResult<TAction, TRow, TEnum>
     {
-        var storage = GetOrAddStorage<T, TAuditResult>();
+        var storage = GetOrAddStorage<T, TResult>();
         var scheme = custom ? AuditScheme.CustomCreate : AuditScheme.Create;
-        type ??= SchemeManager.GetFirstSchemaAuditType<TAuditResult>(type, scheme);
+        type ??= SchemeManager.GetFirstSchemaAuditType<TResult>(type, scheme);
         storage.Postpone(model, type.Value, additional);
     }
-    public void PostponeCreateRange<T, TAuditResult>(IEnumerable<T> models, TEnum? type, object? additional = null, bool custom = false)
-        where T : class, IAuditable<TAuditResult, TAuditAction, TEnum>
-        where TAuditResult : class, IAuditResult<TAuditAction, TEnum>
+    public void PostponeCreateRange<T, TResult>(IEnumerable<T> models, TEnum? type, object? additional = null, bool custom = false, bool grouped = false)
+        where T : class, IAuditable<TResult, TAction, TRow, TEnum>
+        where TResult : class, IAuditResult<TAction, TRow, TEnum>
     {
-        var storage = GetOrAddStorage<T, TAuditResult>();
+        var storage = GetOrAddStorage<T, TResult>();
         var scheme = custom ? AuditScheme.CustomCreate : AuditScheme.Create;
-        type ??= SchemeManager.GetFirstSchemaAuditType<TAuditResult>(type, scheme);
+        type ??= SchemeManager.GetFirstSchemaAuditType<TResult>(type, scheme);
         storage.PostponeRange(models, type.Value, additional);
     }
     #endregion
 
     #region Update
-    public void PostponeUpdate<T, TAuditResult>(T model, TEnum? type = null, object? additional = null, bool custom = false)
-        where T : class, IAuditable<TAuditResult, TAuditAction, TEnum>
-        where TAuditResult : class, IAuditResult<TAuditAction, TEnum>
+    public void PostponeUpdate<T, TResult>(T model, TEnum? type = null, object? additional = null, bool custom = false)
+        where T : class, IAuditable<TResult, TAction, TRow, TEnum>
+        where TResult : class, IAuditResult<TAction, TRow, TEnum>
     {
-        var storage = GetOrAddStorage<T, TAuditResult>();
+        var storage = GetOrAddStorage<T, TResult>();
         var scheme = custom ? AuditScheme.CustomUpdate : AuditScheme.Update;
-        type ??= SchemeManager.GetFirstSchemaAuditType<TAuditResult>(type, scheme);
+        type ??= SchemeManager.GetFirstSchemaAuditType<TResult>(type, scheme);
         storage.Postpone(model, type.Value, additional);
     }
-    public void PostponeUpdateRange<T, TAuditResult>(IEnumerable<T> models, TEnum? type = null, object? additional = null, bool custom = false)
-        where T : class, IAuditable<TAuditResult, TAuditAction, TEnum>
-        where TAuditResult : class, IAuditResult<TAuditAction, TEnum>
+    public void PostponeUpdateRange<T, TResult>(IEnumerable<T> models, TEnum? type = null, object? additional = null, bool custom = false, bool grouped = false)
+        where T : class, IAuditable<TResult, TAction, TRow, TEnum>
+        where TResult : class, IAuditResult<TAction, TRow, TEnum>
     {
-        var storage = GetOrAddStorage<T, TAuditResult>();
+        var storage = GetOrAddStorage<T, TResult>();
         var scheme = custom ? AuditScheme.CustomUpdate : AuditScheme.Update;
-        type ??= SchemeManager.GetFirstSchemaAuditType<TAuditResult>(type, scheme);
+        type ??= SchemeManager.GetFirstSchemaAuditType<TResult>(type, scheme);
         storage.PostponeRange(models, type.Value, additional);
     }
     #endregion
 
     #region Delete
-    public void PostponeDelete<T, TAuditResult>(T model, TEnum? type = null, object? additional = null, bool custom = false)
-        where T : class, IAuditable<TAuditResult, TAuditAction, TEnum>
-        where TAuditResult : class, IAuditResult<TAuditAction, TEnum>
+    public void PostponeDelete<T, TResult>(T model, TEnum? type = null, object? additional = null, bool custom = false)
+        where T : class, IAuditable<TResult, TAction, TRow, TEnum>
+        where TResult : class, IAuditResult<TAction, TRow, TEnum>
     {
-        var storage = GetOrAddStorage<T, TAuditResult>();
+        var storage = GetOrAddStorage<T, TResult>();
         var scheme = custom ? AuditScheme.CustomDelete : AuditScheme.Delete;
-        type ??= SchemeManager.GetFirstSchemaAuditType<TAuditResult>(type, scheme);
+        type ??= SchemeManager.GetFirstSchemaAuditType<TResult>(type, scheme);
         storage.Postpone(model, type.Value, additional);
     }
-    public void PostponeDeleteRange<T, TAuditResult>(IEnumerable<T> models, TEnum? type = null, object? additional = null, bool custom = false)
-        where T : class, IAuditable<TAuditResult, TAuditAction, TEnum>
-        where TAuditResult : class, IAuditResult<TAuditAction, TEnum>
+    public void PostponeDeleteRange<T, TResult>(IEnumerable<T> models, TEnum? type = null, object? additional = null, bool custom = false, bool grouped = false)
+        where T : class, IAuditable<TResult, TAction, TRow, TEnum>
+        where TResult : class, IAuditResult<TAction, TRow, TEnum>
     {
-        var storage = GetOrAddStorage<T, TAuditResult>();
+        var storage = GetOrAddStorage<T, TResult>();
         var scheme = custom ? AuditScheme.CustomDelete : AuditScheme.Delete;
-        type ??= SchemeManager.GetFirstSchemaAuditType<TAuditResult>(type, scheme);
+        type ??= SchemeManager.GetFirstSchemaAuditType<TResult>(type, scheme);
         storage.PostponeRange(models, type.Value, additional);
     }
     #endregion

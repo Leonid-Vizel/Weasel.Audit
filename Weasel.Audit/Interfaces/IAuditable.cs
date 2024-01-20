@@ -2,10 +2,11 @@
 
 namespace Weasel.Audit.Interfaces;
 
-public interface IAuditable<TAuditResult, TAuditAction, TEnum>
-    where TAuditResult : class, IAuditResult<TAuditAction, TEnum>
-    where TAuditAction : class, IAuditAction<TEnum>
-	where TEnum : struct, Enum
+public interface IAuditable<TResult, TAction, TRow, TEnum>
+    where TResult : class, IAuditResult<TAction, TRow, TEnum>
+    where TAction : class, IAuditAction<TRow, TEnum>
+    where TRow : IAuditRow<TEnum>
+    where TEnum : struct, Enum
 {
-    Task<TAuditResult> AuditAsync(DbContext context);
+    Task<TResult> AuditAsync(DbContext context);
 }

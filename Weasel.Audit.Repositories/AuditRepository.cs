@@ -8,18 +8,19 @@ using Weasel.Audit.Services;
 
 namespace Weasel.Audit.Repositories;
 
-public interface IAuditRepository<T, TAuditResult, TAuditAction, TEnum, TColor>
-    where TAuditResult : class, IAuditResult<TAuditAction, TEnum>
-    where T : class, IAuditable<TAuditResult, TAuditAction, TEnum>
-    where TAuditAction : class, IAuditAction<TEnum>
+public interface IAuditRepository<T, TResult, TAction, TRow, TEnum, TColor>
+    where TResult : class, IAuditResult<TAction, TRow, TEnum>
+    where T : class, IAuditable<TResult, TAction, TRow, TEnum>
+    where TAction : class, IAuditAction<TRow, TEnum>
     where TEnum : struct, Enum
     where TColor : struct, Enum
+    where TRow : IAuditRow
 {
     DbContext Context { get; }
-    IPostponedAuditManager<TAuditAction, TEnum, TColor> AuditManager { get; }
+    IPostponedAuditManager<TAction, TRow, TEnum, TColor> AuditManager { get; }
     IAuditPropertyManager PropertyManager { get; }
     DbSet<T> Set { get; }
-    DbSet<TAuditResult> ActionSet { get; }
+    DbSet<TResult> ActionSet { get; }
     ILogger Logger { get; }
 
     Task AuditAddAsync(T model, object? additional = null);
@@ -43,26 +44,26 @@ public interface IAuditRepository<T, TAuditResult, TAuditAction, TEnum, TColor>
 
     #region Defaults LINQ
     IOrderedQueryable<T> OrderBy<TKey>(Expression<Func<T, TKey>> filter);
-    IOrderedQueryable<TAuditResult> OrderByAction<TKey>(Expression<Func<TAuditResult, TKey>> filter);
+    IOrderedQueryable<TResult> OrderByAction<TKey>(Expression<Func<TResult, TKey>> filter);
     IOrderedQueryable<T> OrderByDescending<TKey>(Expression<Func<T, TKey>> filter);
-    IOrderedQueryable<TAuditResult> OrderByDescendingAction<TKey>(Expression<Func<TAuditResult, TKey>> filter);
+    IOrderedQueryable<TResult> OrderByDescendingAction<TKey>(Expression<Func<TResult, TKey>> filter);
     Task<TKey> MaxAsync<TKey>(Expression<Func<T, TKey>> filter, CancellationToken token = default);
     IQueryable<T> Where(Expression<Func<T, bool>> filter);
-    IQueryable<TAuditResult> WhereAction(Expression<Func<TAuditResult, bool>> filter);
+    IQueryable<TResult> WhereAction(Expression<Func<TResult, bool>> filter);
     IQueryable<TProperty> Select<TProperty>(Expression<Func<T, TProperty>> filter);
-    IQueryable<TProperty> SelectAction<TProperty>(Expression<Func<TAuditResult, TProperty>> filter);
+    IQueryable<TProperty> SelectAction<TProperty>(Expression<Func<TResult, TProperty>> filter);
     IIncludableQueryable<T, TProperty> Include<TProperty>(Expression<Func<T, TProperty>> path);
-    IIncludableQueryable<TAuditResult, TProperty> IncludeAction<TProperty>(Expression<Func<TAuditResult, TProperty>> path);
-    Task AddActionAsync(TAuditResult value, CancellationToken token = default);
-    Task AddRangeActionAsync(IEnumerable<TAuditResult> values, CancellationToken token = default);
-    Task<TAuditResult?> FirstOrDefaultActionAsync(Expression<Func<TAuditResult, bool>> filter, CancellationToken token = default);
-    void RemoveAction(TAuditResult value);
+    IIncludableQueryable<TResult, TProperty> IncludeAction<TProperty>(Expression<Func<TResult, TProperty>> path);
+    Task AddActionAsync(TResult value, CancellationToken token = default);
+    Task AddRangeActionAsync(IEnumerable<TResult> values, CancellationToken token = default);
+    Task<TResult?> FirstOrDefaultActionAsync(Expression<Func<TResult, bool>> filter, CancellationToken token = default);
+    void RemoveAction(TResult value);
     Task AddAsync(T value, CancellationToken token = default);
     Task AddRangeAsync(IEnumerable<T> values, CancellationToken token = default);
     void Remove(T value);
     void RemoveRange(IEnumerable<T> value);
     IQueryable<T> GetSet();
-    IQueryable<TAuditResult> GetActionSet();
+    IQueryable<TResult> GetActionSet();
     Task<T?> FirstOrDefaultAsync(Expression<Func<T, bool>> filter, CancellationToken token = default);
     Task<int> CountAsync(CancellationToken token = default);
     Task<int> CountAsync(Expression<Func<T, bool>> filter, CancellationToken token = default);
@@ -73,28 +74,29 @@ public interface IAuditRepository<T, TAuditResult, TAuditAction, TEnum, TColor>
     void UpdateRange(IEnumerable<T> value);
     #endregion
 }
-public class AuditRepository<T, TAuditResult, TAuditAction, TEnum, TColor> : IAuditRepository<T, TAuditResult, TAuditAction, TEnum, TColor>
-    where T : class, IAuditable<TAuditResult, TAuditAction, TEnum>
-    where TAuditResult : class, IAuditResult<TAuditAction, TEnum>
-    where TAuditAction: class, IAuditAction<TEnum>
+public class AuditRepository<T, TResult, TAction, TRow, TEnum, TColor> : IAuditRepository<T, TResult, TAction, TRow, TEnum, TColor>
+    where T : class, IAuditable<TResult, TAction, TRow, TEnum>
+    where TResult : class, IAuditResult<TAction, TRow, TEnum>
+    where TAction: class, IAuditAction<TRow, TEnum>
 	where TEnum : struct, Enum
     where TColor : struct, Enum
+    where TRow : IAuditRow
 {
     public DbSet<T> Set { get; private set; }
-    public DbSet<TAuditResult> ActionSet { get; private set; }
+    public DbSet<TResult> ActionSet { get; private set; }
     public ILogger Logger { get; private set; }
     public DbContext Context { get; private set; }
-    public IPostponedAuditManager<TAuditAction, TEnum, TColor> AuditManager { get; private set; }
+    public IPostponedAuditManager<TAction, TRow, TEnum, TColor> AuditManager { get; private set; }
     public IAuditPropertyManager PropertyManager { get; private set; }
 
-    public AuditRepository(DbContext context, ILoggerFactory loggerFactory, IPostponedAuditManager<TAuditAction, TEnum, TColor> auditManager, IAuditPropertyManager propertyManager)
+    public AuditRepository(DbContext context, ILoggerFactory loggerFactory, IPostponedAuditManager<TAction, TRow, TEnum, TColor> auditManager, IAuditPropertyManager propertyManager)
     {
         Logger = loggerFactory.CreateLogger(GetType().Name);
         Context = context;
         AuditManager = auditManager;
         PropertyManager = propertyManager;
         Set = Context.Set<T>();
-        ActionSet = Context.Set<TAuditResult>();
+        ActionSet = Context.Set<TResult>();
     }
 
     public async Task AuditAddAsync(T model, object? additional = null)
@@ -126,7 +128,7 @@ public class AuditRepository<T, TAuditResult, TAuditAction, TEnum, TColor> : IAu
     {
         await CallBeforeAdd(model);
         await AddAsync(model);
-        AuditManager.PostponeCreate<T, TAuditResult>(model, auditType, additional, auditType != null);
+        AuditManager.PostponeCreate<T, TResult>(model, auditType, additional, auditType != null);
     }
     private async Task PerformAddRangeAsync(IReadOnlyList<T> models, TEnum? auditType = null, object? additional = null)
     {
@@ -139,7 +141,7 @@ public class AuditRepository<T, TAuditResult, TAuditAction, TEnum, TColor> : IAu
             await CallBeforeAdd(model);
         }
         await AddRangeAsync(models);
-        AuditManager.PostponeCreateRange<T, TAuditResult>(models, auditType, additional, auditType != null);
+        AuditManager.PostponeCreateRange<T, TResult>(models, auditType, additional, auditType != null);
     }
     private async Task PerformUpdateAsync(T oldModel, T updateModel, TEnum? auditType = null, object? additional = null)
     {
@@ -150,7 +152,7 @@ public class AuditRepository<T, TAuditResult, TAuditAction, TEnum, TColor> : IAu
             return;
         }
         Update(oldModel);
-        AuditManager.PostponeUpdate<T, TAuditResult>(oldModel, auditType, additional, auditType != null);
+        AuditManager.PostponeUpdate<T, TResult>(oldModel, auditType, additional, auditType != null);
     }
     private async Task PerformUpdateRangeAsync(IReadOnlyList<Tuple<T, T>> models, TEnum? auditType = null, object? additional = null)
     {
@@ -178,13 +180,13 @@ public class AuditRepository<T, TAuditResult, TAuditAction, TEnum, TColor> : IAu
             return;
         }
         UpdateRange(updateList);
-        AuditManager.PostponeUpdateRange<T, TAuditResult>(updateList, auditType, additional, auditType != null);
+        AuditManager.PostponeUpdateRange<T, TResult>(updateList, auditType, additional, auditType != null);
     }
     private async Task PerformDeleteAsync(T model, TEnum? auditType = null, object? additional = null)
     {
         await CallBeforeDelete(model);
         Remove(model);
-        AuditManager.PostponeDelete<T, TAuditResult>(model, auditType, additional, auditType != null);
+        AuditManager.PostponeDelete<T, TResult>(model, auditType, additional, auditType != null);
     }
     private async Task PerformDeleteRangeAsync(IReadOnlyList<T> models, TEnum? auditType = null, object? additional = null)
     {
@@ -198,7 +200,7 @@ public class AuditRepository<T, TAuditResult, TAuditAction, TEnum, TColor> : IAu
             await CallBeforeDelete(model);
         }
         RemoveRange(models);
-        AuditManager.PostponeDeleteRange<T, TAuditResult>(models, auditType, additional, auditType != null);
+        AuditManager.PostponeDeleteRange<T, TResult>(models, auditType, additional, auditType != null);
     }
 
     #region Events
@@ -232,36 +234,36 @@ public class AuditRepository<T, TAuditResult, TAuditAction, TEnum, TColor> : IAu
     #region Defaults (LINQ)
     public IOrderedQueryable<T> OrderBy<TKey>(Expression<Func<T, TKey>> filter)
         => Set.OrderBy(filter);
-    public IOrderedQueryable<TAuditResult> OrderByAction<TKey>(Expression<Func<TAuditResult, TKey>> filter)
+    public IOrderedQueryable<TResult> OrderByAction<TKey>(Expression<Func<TResult, TKey>> filter)
         => ActionSet.OrderBy(filter);
     public IOrderedQueryable<T> OrderByDescending<TKey>(Expression<Func<T, TKey>> filter)
         => Set.OrderByDescending(filter);
-    public IOrderedQueryable<TAuditResult> OrderByDescendingAction<TKey>(Expression<Func<TAuditResult, TKey>> filter)
+    public IOrderedQueryable<TResult> OrderByDescendingAction<TKey>(Expression<Func<TResult, TKey>> filter)
         => ActionSet.OrderByDescending(filter);
     public IQueryable<T> Where(Expression<Func<T, bool>> filter)
         => Set.Where(filter);
-    public IQueryable<TAuditResult> WhereAction(Expression<Func<TAuditResult, bool>> filter)
+    public IQueryable<TResult> WhereAction(Expression<Func<TResult, bool>> filter)
         => ActionSet.Where(filter);
     public IQueryable<TProperty> Select<TProperty>(Expression<Func<T, TProperty>> filter)
         => Set.Select(filter);
-    public IQueryable<TProperty> SelectAction<TProperty>(Expression<Func<TAuditResult, TProperty>> filter)
+    public IQueryable<TProperty> SelectAction<TProperty>(Expression<Func<TResult, TProperty>> filter)
         => ActionSet.Select(filter);
     public IIncludableQueryable<T, TProperty> Include<TProperty>(Expression<Func<T, TProperty>> path)
         => Set.Include(path);
-    public IIncludableQueryable<TAuditResult, TProperty> IncludeAction<TProperty>(Expression<Func<TAuditResult, TProperty>> path)
+    public IIncludableQueryable<TResult, TProperty> IncludeAction<TProperty>(Expression<Func<TResult, TProperty>> path)
         => ActionSet.Include(path);
-    public async Task AddActionAsync(TAuditResult value, CancellationToken token = default)
+    public async Task AddActionAsync(TResult value, CancellationToken token = default)
         => await ActionSet.AddAsync(value, token);
-    public async Task AddRangeActionAsync(IEnumerable<TAuditResult> values, CancellationToken token = default)
+    public async Task AddRangeActionAsync(IEnumerable<TResult> values, CancellationToken token = default)
         => await ActionSet.AddRangeAsync(values, token);
-    public async Task<TAuditResult?> FirstOrDefaultActionAsync(Expression<Func<TAuditResult, bool>> filter, CancellationToken token = default)
+    public async Task<TResult?> FirstOrDefaultActionAsync(Expression<Func<TResult, bool>> filter, CancellationToken token = default)
         => await ActionSet.FirstOrDefaultAsync(filter, token);
-    public void RemoveAction(TAuditResult value)
+    public void RemoveAction(TResult value)
         => ActionSet.Remove(value);
 
     public IQueryable<T> GetSet()
         => Set;
-    public IQueryable<TAuditResult> GetActionSet()
+    public IQueryable<TResult> GetActionSet()
         => ActionSet;
 
     public async Task AddAsync(T value, CancellationToken token = default)

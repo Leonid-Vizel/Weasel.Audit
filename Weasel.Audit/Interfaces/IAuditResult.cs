@@ -2,12 +2,13 @@
 
 namespace Weasel.Audit.Interfaces;
 
-public interface IAuditResult<TAuditAction, TEnum> : IIntKeyedEntity
-    where TAuditAction : class, IAuditAction<TEnum>
+public interface IAuditResult<TAction, TRow, TEnum> : IIntKeyedEntity
+    where TAction : class, IAuditAction<TRow, TEnum>
+    where TRow : IAuditRow<TEnum>
 	where TEnum : struct, Enum
 {
     [IgnoreAuditDisplay]
     int ActionId { get; set; }
     [IgnoreAuditDisplay]
-    TAuditAction Action { get; set; }
+    TAction Action { get; set; }
 }

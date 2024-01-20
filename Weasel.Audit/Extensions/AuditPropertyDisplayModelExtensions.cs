@@ -5,10 +5,11 @@ namespace Weasel.Audit.Extensions;
 
 public static class AuditPropertyDisplayModelExtensions
 {
-    public static void Check<TAuditAction, TEnum>(this AuditHistoryModel<TAuditAction, TEnum> model)
-        where TAuditAction : class, IAuditAction<TEnum>
-		where TEnum : struct, Enum
-	{
+    public static void Check<TAction, TRow, TEnum>(this AuditHistoryModel<TAction, TRow, TEnum> model)
+        where TAction : class, IAuditAction<TRow, TEnum>
+        where TRow : IAuditRow<TEnum>
+        where TEnum : struct, Enum
+    {
         if (model.Actions.Count >= 2)
         {
             int range = model.Actions.Min(x => x.Items.Count);

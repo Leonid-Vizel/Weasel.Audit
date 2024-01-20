@@ -2,9 +2,10 @@
 
 namespace Weasel.Audit.Services;
 
-public interface IAuditActionFactory<TAuditAction, TEnum>
-    where TAuditAction : class, IAuditAction<TEnum>
-	where TEnum : struct, Enum
+public interface IAuditActionFactory<TAction, TRow, TEnum>
+    where TAction : class, IAuditAction<TRow, TEnum>
+    where TRow : IAuditRow<TEnum>
+    where TEnum : struct, Enum
 {
-    public TAuditAction CreateAuditAction(TEnum type, string entityId, object? additional = null);
+    public TAction CreateAuditAction(TRow row, string entityId, object? additional = null);
 }

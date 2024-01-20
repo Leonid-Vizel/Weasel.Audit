@@ -2,8 +2,9 @@
 
 namespace Weasel.Audit.Models;
 
-public sealed class AuditUpdateModel<TAuditAction, TEnum> : AuditIndexModel<TAuditAction, TEnum>
-    where TAuditAction : class, IAuditAction<TEnum>
+public sealed class AuditUpdateModel<TAction, TRow, TEnum> : AuditIndexModel<TAction, TRow, TEnum>
+    where TAction : class, IAuditAction<TRow, TEnum>
+    where TRow : IAuditRow<TEnum>
 	where TEnum : struct, Enum
 {
     public List<AuditPropertyDisplayModel> Old { get; set; } = null!;

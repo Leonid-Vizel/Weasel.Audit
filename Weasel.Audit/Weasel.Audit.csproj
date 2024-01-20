@@ -6,11 +6,11 @@
     <Nullable>enable</Nullable>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <Title>$(AssemblyName)</Title>
-    <VersionPrefix>8.0.16.2</VersionPrefix>
+    <VersionPrefix>8.1.0-alpha.2</VersionPrefix>
     <Company>Vizel Leonid</Company>
     <Product>Weasel</Product>
     <Authors>Vizel Leonid</Authors>
-    <Description>User actions audit library</Description>
+    <Description>CAPABILITY BROKEN, MIGRATION NEEDED + SYNC WITH OTEHR PACKAGES</Description>
     <PackageReleaseNotes>Fixes</PackageReleaseNotes>
     <PackageIcon>weasel.png</PackageIcon>
     <RepositoryType>git</RepositoryType>
@@ -32,7 +32,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.1" />
     <PackageReference Include="Weasel.Tools.Extensions.Common" Version="8.0.11" />
   </ItemGroup>
 
