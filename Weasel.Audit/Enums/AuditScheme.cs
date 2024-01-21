@@ -8,5 +8,4 @@ public enum AuditScheme
     CustomUpdate,
     Delete,
     CustomDelete,
-    Message,
 }

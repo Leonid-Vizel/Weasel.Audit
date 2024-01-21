@@ -105,7 +105,17 @@ public sealed class PostponedAuditManager<TContext, TAction, TRow, TEnum, TColor
         var storage = GetOrAddStorage<T, TResult>();
         var scheme = custom ? AuditScheme.CustomCreate : AuditScheme.Create;
         type ??= SchemeManager.GetFirstSchemaAuditType<TResult>(type, scheme);
-        storage.PostponeRange(models, type.Value, additional);
+        if (grouped)
+        {
+            storage.PostponeRange(models, type.Value, additional);
+        }
+        else
+        {
+            foreach (var model in models)
+            {
+                storage.PostponeRange([model], type.Value, additional);
+            }
+        }
     }
     #endregion
 
@@ -126,7 +136,17 @@ public sealed class PostponedAuditManager<TContext, TAction, TRow, TEnum, TColor
         var storage = GetOrAddStorage<T, TResult>();
         var scheme = custom ? AuditScheme.CustomUpdate : AuditScheme.Update;
         type ??= SchemeManager.GetFirstSchemaAuditType<TResult>(type, scheme);
-        storage.PostponeRange(models, type.Value, additional);
+        if (grouped)
+        {
+            storage.PostponeRange(models, type.Value, additional);
+        }
+        else
+        {
+            foreach (var model in models)
+            {
+                storage.PostponeRange([model], type.Value, additional);
+            }
+        }
     }
     #endregion
 
@@ -147,7 +167,17 @@ public sealed class PostponedAuditManager<TContext, TAction, TRow, TEnum, TColor
         var storage = GetOrAddStorage<T, TResult>();
         var scheme = custom ? AuditScheme.CustomDelete : AuditScheme.Delete;
         type ??= SchemeManager.GetFirstSchemaAuditType<TResult>(type, scheme);
-        storage.PostponeRange(models, type.Value, additional);
+        if (grouped)
+        {
+            storage.PostponeRange(models, type.Value, additional);
+        }
+        else
+        {
+            foreach (var model in models)
+            {
+                storage.PostponeRange([model], type.Value, additional);
+            }
+        }
     }
     #endregion
 
