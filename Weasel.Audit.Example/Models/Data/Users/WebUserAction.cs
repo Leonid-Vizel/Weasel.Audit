@@ -2,12 +2,14 @@
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using Weasel.Audit.Attributes.Display;
+using Weasel.Audit.Example.Models.Data.Audits;
+using Weasel.Audit.Example.Models.Enums.Audit;
 using Weasel.Audit.Interfaces;
 
-namespace Weasel.Audit.Example;
+namespace Weasel.Audit.Example.Models.Data.Users;
 
 [ValidateNever]
-public sealed class WebUserAction : WebUserBase, IAuditResult<AuditAction, AuditType>
+public sealed class WebUserAction : WebUserBase, IAuditResult<AuditAction, AuditRow, AuditType>
 {
     [Key]
     [IgnoreAuditDisplay]

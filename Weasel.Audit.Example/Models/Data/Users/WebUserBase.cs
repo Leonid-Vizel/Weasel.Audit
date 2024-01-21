@@ -4,9 +4,10 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Weasel.Audit.Attributes.AuditUpdate;
 using Weasel.Audit.Attributes.Display;
+using Weasel.Audit.Example.Models.Enums.Users;
 using Weasel.Tools.Extensions.Common;
 
-namespace Weasel.Audit.Example;
+namespace Weasel.Audit.Example.Models.Data.Users;
 
 public abstract class WebUserBase
 {

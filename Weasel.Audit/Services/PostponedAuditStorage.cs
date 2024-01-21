@@ -67,7 +67,7 @@ public sealed class PostponedAuditStorage<T, TResult, TAction, TRow, TEnum, TCol
 
         foreach (var modelData in _postponedModels)
         {
-            var row = RowFactory.CreateAuditRow(modelData.ActionType, modelData.Additional);
+            var row = RowFactory.CreateAuditRow(modelData.ActionType, modelData.Models.Count() > 1, modelData.Additional);
             foreach (var model in modelData.Models)
             {
                 TResult action = await model.AuditAsync(context);

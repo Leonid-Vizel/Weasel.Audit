@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using Weasel.Audit.Attributes.Enums;
 
-namespace Weasel.Audit.Example;
+namespace Weasel.Audit.Example.Models.Enums.Audit;
 
 public enum AuditColor
 {

@@ -8,13 +8,16 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using Weasel.Audit.Attributes.AuditUpdate;
+using Weasel.Audit.Example.Models.Data.Audits;
+using Weasel.Audit.Example.Models.Enums.Audit;
+using Weasel.Audit.Example.Models.Enums.Users;
 using Weasel.Audit.Interfaces;
 using Weasel.Tools.Extensions.Common;
 
-namespace Weasel.Audit.Example;
+namespace Weasel.Audit.Example.Models.Data.Users;
 
 [ValidateNever]
-public sealed class WebUser : WebUserBase, IAuditable<WebUserAction, AuditAction, AuditType>
+public sealed class WebUser : WebUserBase, IAuditable<WebUserAction, AuditAction, AuditRow, AuditType>
 {
     [Key]
     [IgnoreAuditUpdate]

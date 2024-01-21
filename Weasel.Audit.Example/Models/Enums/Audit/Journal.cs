@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Weasel.Audit.Example;
+namespace Weasel.Audit.Example.Models.Enums.Audit;
 
 public enum Journal
 {

@@ -16,7 +16,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Weasel.Audit.Repositories",
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Weasel.Audit.DependencyInjection.Extensions", "Weasel.Audit.DependencyInjection.Extensions\Weasel.Audit.DependencyInjection.Extensions.csproj", "{F5D7ACFF-1BF3-42AD-B5B8-3CB01B5C1012}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Weasel.Audit.Example", "Weasel.Audit.Example\Weasel.Audit.Example.csproj", "{9DE6D73F-F796-419D-9B0C-F18799FDDB05}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Weasel.Audit.Example", "Weasel.Audit.Example\Weasel.Audit.Example.csproj", "{9DE6D73F-F796-419D-9B0C-F18799FDDB05}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

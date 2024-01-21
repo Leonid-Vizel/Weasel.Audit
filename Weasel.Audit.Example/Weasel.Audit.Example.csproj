@@ -16,4 +16,8 @@
     <ProjectReference Include="..\Weasel.Audit.DependencyInjection.Extensions\Weasel.Audit.DependencyInjection.Extensions.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Models\View\Users\" />
+  </ItemGroup>
+
 </Project>

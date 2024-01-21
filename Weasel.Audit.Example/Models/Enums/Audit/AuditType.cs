@@ -1,7 +1,8 @@
 ﻿using Weasel.Audit.Attributes.Enums;
 using Weasel.Audit.Enums;
+using Weasel.Audit.Example.Models.Data.Users;
 
-namespace Weasel.Audit.Example;
+namespace Weasel.Audit.Example.Models.Enums.Audit;
 
 public enum AuditType
 {

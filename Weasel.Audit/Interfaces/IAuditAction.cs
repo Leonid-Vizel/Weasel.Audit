@@ -5,6 +5,6 @@ public interface IAuditAction<TRow, TEnum> : IIntKeyedEntity
     where TEnum : struct, Enum
 {
     int RowId { get; set; }
-    TRow Row { get; }
+    TRow Row { get; set; }
     string EntityId { get; set; }
 }

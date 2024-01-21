@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
-using Weasel.Audit.Example;
 using Weasel.Audit.DependencyInjection.Extensions;
+using Weasel.Audit.Example.Data;
+using Weasel.Audit.Example.Models.Enums.Audit;
+using Weasel.Audit.Example.Models.Data.Audits;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,7 +23,7 @@ builder.Services.AddDbContext<MainDbContext>(options =>
     });
 });
 
-builder.Services.AddAudit<MainDbContext, AuditActionFactory, AuditAction, AuditType, AuditColor>();
+builder.Services.AddAudit<MainDbContext, AuditRowFactory, AuditActionFactory, AuditAction, AuditRow, AuditType, AuditColor>();
 
 var app = builder.Build();
 
