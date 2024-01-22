@@ -24,16 +24,16 @@ public interface IAuditRepository<T, TResult, TAction, TRow, TEnum, TColor>
 
     Task AuditAddAsync(T model, object? additional = null);
     Task AuditAddCustomAsync(T model, TEnum customType, object? additional = null);
-    Task AuditAddRangeAsync(IReadOnlyList<T> models, object? additional = null);
-    Task AuditAddCustomRangeAsync(IReadOnlyList<T> models, TEnum customType, object? additional = null);
+    Task AuditAddRangeAsync(IReadOnlyList<T> models, object? additional = null, bool grouped = false);
+    Task AuditAddCustomRangeAsync(IReadOnlyList<T> models, TEnum customType, object? additional = null, bool grouped = false);
     Task AuditUpdateAsync(T oldModel, T updateModel, object? additional = null);
     Task AuditUpdateCustomAsync(T oldModel, T updateModel, TEnum customType, object? additional = null);
-    Task AuditUpdateRangeAsync(IReadOnlyList<Tuple<T, T>> models, object? additional = null);
-    Task AuditUpdateCustomRangeAsync(IReadOnlyList<Tuple<T, T>> models, TEnum customType, object? additional = null);
+    Task AuditUpdateRangeAsync(IReadOnlyList<Tuple<T, T>> models, object? additional = null, bool grouped = false);
+    Task AuditUpdateCustomRangeAsync(IReadOnlyList<Tuple<T, T>> models, TEnum customType, object? additional = null, bool grouped = false);
     Task AuditDeleteAsync(T model, object? additional = null);
     Task AuditDeleteCustomAsync(T model, TEnum customType, object? additional = null);
-    Task AuditDeleteRangeAsync(IReadOnlyList<T> models, object? additional = null);
-    Task AuditDeleteCustomRangeAsync(IReadOnlyList<T> models, TEnum customType, object? additional = null);
+    Task AuditDeleteRangeAsync(IReadOnlyList<T> models, object? additional = null, bool grouped = false);
+    Task AuditDeleteCustomRangeAsync(IReadOnlyList<T> models, TEnum customType, object? additional = null, bool grouped = false);
 
     #region Events
     event BeforeInfoAuditDelegate<T>? BeforeAdd;
@@ -102,26 +102,26 @@ public class AuditRepository<T, TResult, TAction, TRow, TEnum, TColor> : IAuditR
         => await PerformAddAsync(model, null, additional);
     public async Task AuditAddCustomAsync(T model, TEnum customType, object? additional = null)
         => await PerformAddAsync(model, customType, additional);
-    public async Task AuditAddRangeAsync(IReadOnlyList<T> models, object? additional = null)
-        => await PerformAddRangeAsync(models, null, additional);
-    public async Task AuditAddCustomRangeAsync(IReadOnlyList<T> models, TEnum customType, object? additional = null)
-        => await PerformAddRangeAsync(models, customType, additional);
+    public async Task AuditAddRangeAsync(IReadOnlyList<T> models, object? additional = null, bool grouped = false)
+        => await PerformAddRangeAsync(models, null, additional, grouped);
+    public async Task AuditAddCustomRangeAsync(IReadOnlyList<T> models, TEnum customType, object? additional = null, bool grouped = false)
+        => await PerformAddRangeAsync(models, customType, additional, grouped);
     public async Task AuditUpdateAsync(T oldModel, T updateModel, object? additional = null)
         => await PerformUpdateAsync(oldModel, updateModel, null, additional);
     public async Task AuditUpdateCustomAsync(T oldModel, T updateModel, TEnum customType, object? additional = null)
         => await PerformUpdateAsync(oldModel, updateModel, customType, additional);
-    public async Task AuditUpdateRangeAsync(IReadOnlyList<Tuple<T, T>> models, object? additional = null)
-        => await PerformUpdateRangeAsync(models, null, additional);
-    public async Task AuditUpdateCustomRangeAsync(IReadOnlyList<Tuple<T, T>> models, TEnum customType, object? additional = null)
-        => await PerformUpdateRangeAsync(models, customType, additional);
+    public async Task AuditUpdateRangeAsync(IReadOnlyList<Tuple<T, T>> models, object? additional = null, bool grouped = false)
+        => await PerformUpdateRangeAsync(models, null, additional, grouped);
+    public async Task AuditUpdateCustomRangeAsync(IReadOnlyList<Tuple<T, T>> models, TEnum customType, object? additional = null, bool grouped = false)
+        => await PerformUpdateRangeAsync(models, customType, additional, grouped);
     public async Task AuditDeleteAsync(T model, object? additional = null)
         => await PerformDeleteAsync(model, null, additional);
     public async Task AuditDeleteCustomAsync(T model, TEnum customType, object? additional = null)
         => await PerformDeleteAsync(model, customType, additional);
-    public async Task AuditDeleteRangeAsync(IReadOnlyList<T> models, object? additional = null)
-        => await PerformDeleteRangeAsync(models, null, additional);
-    public async Task AuditDeleteCustomRangeAsync(IReadOnlyList<T> models, TEnum customType, object? additional = null)
-        => await PerformDeleteRangeAsync(models, customType, additional);
+    public async Task AuditDeleteRangeAsync(IReadOnlyList<T> models, object? additional = null, bool grouped = false)
+        => await PerformDeleteRangeAsync(models, null, additional, grouped);
+    public async Task AuditDeleteCustomRangeAsync(IReadOnlyList<T> models, TEnum customType, object? additional = null, bool grouped = false)
+        => await PerformDeleteRangeAsync(models, customType, additional, grouped);
 
     private async Task PerformAddAsync(T model, TEnum? auditType = null, object? additional = null)
     {
@@ -129,7 +129,7 @@ public class AuditRepository<T, TResult, TAction, TRow, TEnum, TColor> : IAuditR
         await AddAsync(model);
         AuditManager.PostponeCreate<T, TResult>(model, auditType, additional, auditType != null);
     }
-    private async Task PerformAddRangeAsync(IReadOnlyList<T> models, TEnum? auditType = null, object? additional = null)
+    private async Task PerformAddRangeAsync(IReadOnlyList<T> models, TEnum? auditType = null, object? additional = null, bool grouped = false)
     {
         if (models.Count == 0)
         {
@@ -140,7 +140,7 @@ public class AuditRepository<T, TResult, TAction, TRow, TEnum, TColor> : IAuditR
             await CallBeforeAdd(model);
         }
         await AddRangeAsync(models);
-        AuditManager.PostponeCreateRange<T, TResult>(models, auditType, additional, auditType != null);
+        AuditManager.PostponeCreateRange<T, TResult>(models, auditType, additional, auditType != null, grouped);
     }
     private async Task PerformUpdateAsync(T oldModel, T updateModel, TEnum? auditType = null, object? additional = null)
     {
@@ -153,7 +153,7 @@ public class AuditRepository<T, TResult, TAction, TRow, TEnum, TColor> : IAuditR
         Update(oldModel);
         AuditManager.PostponeUpdate<T, TResult>(oldModel, auditType, additional, auditType != null);
     }
-    private async Task PerformUpdateRangeAsync(IReadOnlyList<Tuple<T, T>> models, TEnum? auditType = null, object? additional = null)
+    private async Task PerformUpdateRangeAsync(IReadOnlyList<Tuple<T, T>> models, TEnum? auditType = null, object? additional = null, bool grouped = false)
     {
         if (models.Count == 0)
         {
@@ -179,7 +179,7 @@ public class AuditRepository<T, TResult, TAction, TRow, TEnum, TColor> : IAuditR
             return;
         }
         UpdateRange(updateList);
-        AuditManager.PostponeUpdateRange<T, TResult>(updateList, auditType, additional, auditType != null);
+        AuditManager.PostponeUpdateRange<T, TResult>(updateList, auditType, additional, auditType != null, grouped);
     }
     private async Task PerformDeleteAsync(T model, TEnum? auditType = null, object? additional = null)
     {
@@ -187,7 +187,7 @@ public class AuditRepository<T, TResult, TAction, TRow, TEnum, TColor> : IAuditR
         Remove(model);
         AuditManager.PostponeDelete<T, TResult>(model, auditType, additional, auditType != null);
     }
-    private async Task PerformDeleteRangeAsync(IReadOnlyList<T> models, TEnum? auditType = null, object? additional = null)
+    private async Task PerformDeleteRangeAsync(IReadOnlyList<T> models, TEnum? auditType = null, object? additional = null, bool grouped = false)
     {
         if (models.Count == 0)
         {
@@ -199,7 +199,7 @@ public class AuditRepository<T, TResult, TAction, TRow, TEnum, TColor> : IAuditR
             await CallBeforeDelete(model);
         }
         RemoveRange(models);
-        AuditManager.PostponeDeleteRange<T, TResult>(models, auditType, additional, auditType != null);
+        AuditManager.PostponeDeleteRange<T, TResult>(models, auditType, additional, auditType != null, grouped);
     }
 
     #region Events

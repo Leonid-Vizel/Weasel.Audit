@@ -17,7 +17,7 @@ public abstract class AuditDescAttribute : Attribute
         Color = color;
         Scheme = scheme;
         Type = type;
-        SearchTypeName = Type.Name;
+        SearchTypeName = Type.Name.ToLower();
     }
 }
 

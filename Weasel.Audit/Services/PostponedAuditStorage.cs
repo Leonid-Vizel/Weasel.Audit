@@ -83,7 +83,7 @@ public sealed class PostponedAuditStorage<T, TResult, TAction, TRow, TEnum, TCol
 
     public string GetLogData()
     {
-        var groupedCount = _postponedModels.Count(x => x.Models.Count() > 0);
-        return $"{nameof(T)}:\t{groupedCount} Standart\t{_postponedModels.Count - groupedCount} Grouped";
+        var groupedCount = _postponedModels.Count(x => x.Models.Count() > 1);
+        return $"{typeof(T).Name}:\t{_postponedModels.Count - groupedCount} Standart\t{groupedCount} Grouped";
     }
 }
