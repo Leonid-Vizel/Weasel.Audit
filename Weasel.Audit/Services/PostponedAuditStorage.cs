@@ -8,39 +8,44 @@ public struct PostponedModelData<T, TEnum>
     where TEnum : struct, Enum
     where T : class
 {
-    public T Model { get; private set; }
+    public IEnumerable<T> Models { get; private set; }
     public TEnum ActionType { get; private set; }
     public object? Additional { get; private set; }
-    public PostponedModelData(T model, TEnum actionType, object? additional = null)
+    public PostponedModelData(IEnumerable<T> models, TEnum actionType, object? additional = null)
     {
-        Model = model;
+        Models = models;
         Additional = additional;
         ActionType = actionType;
     }
 }
 
-public interface IPosponedActionsStorage<TAuditAction, TEnum, TColor>
-    where TAuditAction : class, IAuditAction<TEnum>
-	where TEnum : struct, Enum
+public interface IPosponedActionsStorage<TAction, TRow, TEnum, TColor>
+    where TAction : class, IAuditAction<TRow, TEnum>
+    where TRow : IAuditRow<TEnum>
     where TColor : struct, Enum
+	where TEnum : struct, Enum
 {
-    IPostponedAuditManager<TAuditAction, TEnum, TColor> PostponedAuditManager { get; }
-    public IAuditActionFactory<TAuditAction, TEnum> ActionFactory { get; }
+    IPostponedAuditManager<TAction, TRow, TEnum, TColor> PostponedAuditManager { get; }
+    IAuditActionFactory<TAction, TRow, TEnum> ActionFactory { get; }
     Task PlanPerformActionsAsync(DbContext context);
+    string GetLogData();
 }
-public sealed class PostponedAuditStorage<T, TAuditResult, TAuditAction, TEnum, TColor> : IPosponedActionsStorage<TAuditAction, TEnum, TColor>
-    where T : class, IAuditable<TAuditResult, TAuditAction , TEnum>
-    where TAuditResult : class, IAuditResult<TAuditAction, TEnum>
-    where TAuditAction : class, IAuditAction<TEnum>
-	where TEnum : struct, Enum
+
+public sealed class PostponedAuditStorage<T, TResult, TAction, TRow, TEnum, TColor> : IPosponedActionsStorage<TAction, TRow, TEnum, TColor>
+    where T : class, IAuditable<TResult, TAction, TRow, TEnum>
+    where TResult : class, IAuditResult<TAction, TRow, TEnum>
+    where TAction : class, IAuditAction<TRow, TEnum>
+    where TRow : IAuditRow<TEnum>
     where TColor : struct, Enum
+	where TEnum : struct, Enum
 {
     private readonly List<PostponedModelData<T, TEnum>> _postponedModels;
 
-    public IPostponedAuditManager<TAuditAction, TEnum, TColor> PostponedAuditManager { get; private set; }
-    public IAuditActionFactory<TAuditAction, TEnum> ActionFactory => PostponedAuditManager.ActionFactory;
+    public IPostponedAuditManager<TAction, TRow, TEnum, TColor> PostponedAuditManager { get; private set; }
+    public IAuditActionFactory<TAction, TRow, TEnum> ActionFactory => PostponedAuditManager.ActionFactory;
+    public IAuditRowFactory<TRow, TEnum> RowFactory => PostponedAuditManager.RowFactory;
 
-    public PostponedAuditStorage(IPostponedAuditManager<TAuditAction, TEnum, TColor> postponedAuditManager)
+    public PostponedAuditStorage(IPostponedAuditManager<TAction, TRow, TEnum, TColor> postponedAuditManager)
     {
         PostponedAuditManager = postponedAuditManager;
         _postponedModels = [];
@@ -48,33 +53,37 @@ public sealed class PostponedAuditStorage<T, TAuditResult, TAuditAction, TEnum, 
 
     #region Postpone
     public void Postpone(T model, TEnum type, object? additional = null)
-        => _postponedModels.Add(new PostponedModelData<T, TEnum>(model, type, additional));
+        => _postponedModels.Add(new PostponedModelData<T, TEnum>([model], type, additional));
     public void PostponeRange(IEnumerable<T> models, TEnum type, object? additional = null)
-        => _postponedModels.AddRange(models.Select(x => new PostponedModelData<T, TEnum>(x, type, additional)));
+        => _postponedModels.Add(new PostponedModelData<T, TEnum>(models, type, additional));
     #endregion
 
     #region PlanPerformActions
-    private async Task PlanAddActionsAsync(DbContext context, List<TAuditResult> list)
+    private async Task PlanAddActionsAsync(DbContext context, List<TResult> list)
     {
-        if (_postponedModels.Count == 0)
-        {
-            return;
-        }
-
         foreach (var modelData in _postponedModels)
         {
-            var model = modelData.Model;
-            TAuditResult action = await model.AuditAsync(context);
-            string entityId = context.GetAuditEntityId(model);
-            action.Action = ActionFactory.CreateAuditAction(modelData.ActionType, entityId, modelData.Additional);
-            list.Add(action);
+            var row = RowFactory.CreateAuditRow(modelData.ActionType, modelData.Models.Count() > 1, modelData.Additional);
+            foreach (var model in modelData.Models)
+            {
+                TResult action = await model.AuditAsync(context);
+                string entityId = context.GetAuditEntityId(model);
+                action.Action = ActionFactory.CreateAuditAction(row, entityId, modelData.Additional);
+                list.Add(action);
+            }
         }
     }
     public async Task PlanPerformActionsAsync(DbContext context)
     {
-        List<TAuditResult> actionAddList = [];
+        List<TResult> actionAddList = [];
         await PlanAddActionsAsync(context, actionAddList);
         await context.AddRangeAsync(actionAddList);
     }
     #endregion
+
+    public string GetLogData()
+    {
+        var groupedCount = _postponedModels.Count(x => x.Models.Count() > 1);
+        return $"{typeof(T).Name}:\t{_postponedModels.Count - groupedCount} Standart\t{groupedCount} Grouped";
+    }
 }

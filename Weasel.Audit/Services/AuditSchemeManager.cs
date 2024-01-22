@@ -1,5 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using System.Collections.Frozen;
+using System.Drawing;
 using System.Reflection;
 using Weasel.Audit.Attributes.Enums;
 using Weasel.Audit.Enums;
@@ -49,24 +50,26 @@ public sealed class AuditSchemeManager<TEnum, TColor> : IAuditSchemeManager<TEnu
         var colorDescDict = new Dictionary<Enum, AuditColorAttribute>();
         var enumDescDict = new Dictionary<TEnum, AuditDescAttribute>();
         var auditTypeSearchDict = new Dictionary<string, Type>();
+        var enumType = typeof(TEnum);
         foreach (TEnum type in Enum.GetValues<TEnum>())
         {
-            var decription = GetAuditEnumDescription(type);
+            var decription = enumType.GetMember(type.ToString()).FirstOrDefault()?.GetCustomAttribute<AuditDescAttribute>();
             if (decription == null)
             {
-                throw new ArgumentNullException($"Provide {nameof(AuditDescAttribute)} attribute for {type}!");
+                throw new Exception($"Provide {nameof(AuditDescAttribute)} attribute for {type}!");
             }
             enumDescDict.TryAdd(type, decription);
             auditTypeSearchDict.TryAdd(decription.SearchTypeName, decription.Type);
         }
+        var colorType = typeof(TColor);
         foreach (TColor color in Enum.GetValues<TColor>())
         {
-            var description = typeof(TColor).GetMember(color.ToString()).FirstOrDefault()?.GetCustomAttribute<AuditColorAttribute>();
-            if (description == null)
+            var colorAttr = colorType.GetMember(color.ToString()).FirstOrDefault()?.GetCustomAttribute<AuditColorAttribute>();
+            if (colorAttr == null)
             {
                 continue;
             }
-            colorDescDict.TryAdd(color, description);
+            colorDescDict.TryAdd(color, colorAttr);
         }
         _enumDescriptions = enumDescDict.ToFrozenDictionary();
         _colorDescriptions = colorDescDict.ToFrozenDictionary();

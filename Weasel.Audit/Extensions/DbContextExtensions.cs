@@ -86,17 +86,19 @@ public static class DbContextExtensions
             }
         }
     }
-    public static IQueryable<IAuditResult<TAuditAction, TEnum>>? GetAuditResultQueryable<TAuditAction, TEnum>(this DbContext context, Type type)
-        where TAuditAction : class, IAuditAction<TEnum>
+    public static IQueryable<IAuditResult<TAction, TRow, TEnum>>? GetAuditResultQueryable<TAction, TRow, TEnum>(this DbContext context, Type type)
+        where TAction : class, IAuditAction<TRow, TEnum>
+        where TRow : IAuditRow<TEnum>
 		where TEnum : struct, Enum
-		=> setMethod
+        => setMethod
         .MakeGenericMethod(type)
-        .Invoke(context, null) as IQueryable<IAuditResult<TAuditAction, TEnum>>;
-    public static IQueryable<IAuditResult<TAuditAction, TEnum>> IncludeAuditResult<TAuditAction, TEnum>(this DbContext context, Type type, int depth = 20)
-        where TAuditAction : class, IAuditAction<TEnum>
+        .Invoke(context, null) as IQueryable<IAuditResult<TAction, TRow, TEnum>>;
+    public static IQueryable<IAuditResult<TAction, TRow, TEnum>> IncludeAuditResult<TAction, TRow, TEnum>(this DbContext context, Type type, int depth = 20)
+        where TAction : class, IAuditAction<TRow, TEnum>
+        where TRow : IAuditRow<TEnum>
 		where TEnum : struct, Enum
-	{
-        var query = context.GetAuditResultQueryable<TAuditAction, TEnum>(type);
+    {
+        var query = context.GetAuditResultQueryable<TAction, TRow, TEnum>(type);
         if (query == null)
         {
             throw new Exception($"Cant get set of {type.FullName} from passed DbContext instance");
