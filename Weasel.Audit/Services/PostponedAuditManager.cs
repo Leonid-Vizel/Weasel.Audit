@@ -198,7 +198,7 @@ public sealed class PostponedAuditManager<TContext, TAction, TRow, TEnum, TColor
                     await storage.PlanPerformActionsAsync(context);
                 }
                 await context.SaveChangesAsync();
-                _logger.LogInformation($"Performed postponed action(s) for types: {string.Join(", ", _storages.Select(x => x.Key.Type.Name))}");
+                _logger.LogInformation($"Postponed audit action(s) successfully complete!\n{string.Join("\n", _storages.Select(x => x.Value.GetLogData()))}");
             }
             catch (Exception ex)
             {

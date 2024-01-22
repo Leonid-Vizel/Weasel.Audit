@@ -26,8 +26,9 @@ public interface IPosponedActionsStorage<TAction, TRow, TEnum, TColor>
 	where TEnum : struct, Enum
 {
     IPostponedAuditManager<TAction, TRow, TEnum, TColor> PostponedAuditManager { get; }
-    public IAuditActionFactory<TAction, TRow, TEnum> ActionFactory { get; }
+    IAuditActionFactory<TAction, TRow, TEnum> ActionFactory { get; }
     Task PlanPerformActionsAsync(DbContext context);
+    string GetLogData();
 }
 
 public sealed class PostponedAuditStorage<T, TResult, TAction, TRow, TEnum, TColor> : IPosponedActionsStorage<TAction, TRow, TEnum, TColor>
@@ -60,11 +61,6 @@ public sealed class PostponedAuditStorage<T, TResult, TAction, TRow, TEnum, TCol
     #region PlanPerformActions
     private async Task PlanAddActionsAsync(DbContext context, List<TResult> list)
     {
-        if (_postponedModels.Count == 0)
-        {
-            return;
-        }
-
         foreach (var modelData in _postponedModels)
         {
             var row = RowFactory.CreateAuditRow(modelData.ActionType, modelData.Models.Count() > 1, modelData.Additional);
@@ -84,4 +80,10 @@ public sealed class PostponedAuditStorage<T, TResult, TAction, TRow, TEnum, TCol
         await context.AddRangeAsync(actionAddList);
     }
     #endregion
+
+    public string GetLogData()
+    {
+        var groupedCount = _postponedModels.Count(x => x.Models.Count() > 0);
+        return $"{nameof(T)}:\t{groupedCount} Standart\t{_postponedModels.Count - groupedCount} Grouped";
+    }
 }
